@@ -1,4 +1,15 @@
 defmodule ExPublicKey do
+
+  def load(file_path) do
+    case File.read(file_path) do
+      {:ok, key_string} ->
+        ExPublicKey.loads(key_string)
+      {:error, reason} ->
+        raise File.error, reason
+      _ ->
+        raise ArgumentError, message: "invalid argument"
+    end
+  end
   
   def loads(pem_string) do
     pem_entries = :public_key.pem_decode(pem_string)
@@ -7,7 +18,7 @@ defmodule ExPublicKey do
         raise ArgumentError, message: "invalid argument"
       x when x > 1 ->
         raise ArgumentError, message: "found multiple PEM entries, expected only 1"
-      x ->
+      x when x == 1 ->
         load_pem_entry(Enum.at(pem_entries, 0))
     end
   end

@@ -1,8 +1,8 @@
 defmodule ExPublicKeyTest do
   use ExUnit.Case
 
-  test "read RSA keys in PEM format" do
-
+  setup do
+    # generate a RSA key pair
     # generate a unique temp file name
     rand_string = ExCrypto.rand_chars(4)
     rsa_private_key_path = "/tmp/test_ex_crypto_rsa_private_key_#{rand_string}.pem"
@@ -16,21 +16,29 @@ defmodule ExPublicKeyTest do
     System.cmd(
       "openssl", ["rsa", "-in", rsa_private_key_path, "-outform", "PEM", "-pubout", "-out", rsa_public_key_path])
 
+    on_exit fn ->
+      # cleanup: delete the temp keys
+      File.rm!(rsa_private_key_path)
+      File.rm!(rsa_public_key_path)
+    end
+
+    {:ok, rsa_private_key_path: rsa_private_key_path, rsa_public_key_path: rsa_public_key_path}
+  end
+
+  test "read RSA keys in PEM format", context do
+
+    # IO.inspect context
     # load the private key
-    {:ok, priv_key_string} = File.read(rsa_private_key_path)
+    {:ok, priv_key_string} = File.read(context[:rsa_private_key_path])
     rsa_priv_key = ExPublicKey.loads(priv_key_string)
     assert(is_map(rsa_priv_key))
     assert(rsa_priv_key.__struct__ == RSAPrivateKey)
 
     # load the public key
-    {:ok, pub_key_string} = File.read(rsa_public_key_path)
+    {:ok, pub_key_string} = File.read(context[:rsa_public_key_path])
     rsa_pub_key = ExPublicKey.loads(pub_key_string)
     assert(is_map(rsa_pub_key))
     assert(rsa_pub_key.__struct__ == RSAPublicKey)
-
-    # cleanup: delete the temp keys
-    File.rm!(rsa_private_key_path)
-    File.rm!(rsa_public_key_path)
   end
 
   test "try random string in key loads function and observe ArgumentError" do
