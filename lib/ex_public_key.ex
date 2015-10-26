@@ -29,24 +29,21 @@ defmodule ExPublicKey do
         raise ExCrypto.Error, reason: reason
     end
   end
+
+  defp validate_pem_length(pem_entries) do
+    case length(pem_entries) do
+      0 -> {:error, "invalid argument"}
+      x when x > 1 -> {:error, "found multiple PEM entries, expected only 1"}
+      x when x == 1 -> {:ok, Enum.at(pem_entries, 0)}
+    end
+  end
   
   def loads(pem_string) do
     pem_entries = :public_key.pem_decode(pem_string)
-    case length(pem_entries) do
-      0 ->
-        {:error, "invalid argument"}
-      x when x > 1 ->
-        {:error, "found multiple PEM entries, expected only 1"}
-      x when x == 1 ->
-        case load_pem_entry(Enum.at(pem_entries, 0)) do
-          {:error, reason} ->
-            {:error, reason}
-          {:ok, key} ->
-            {:ok, key}
-          _ ->
-            {:error, "something unexpected happened"}
-        end
-    end
+    pipe_matching x, {:ok, x},
+      validate_pem_length(pem_entries)
+      |> load_pem_entry
+      |> sort_key_tup
   end
 
   def loads!(pem_string) do
@@ -59,7 +56,13 @@ defmodule ExPublicKey do
   end
 
   defp load_pem_entry(pem_entry) do
-    key_tup = :public_key.pem_entry_decode(pem_entry)
+    {:ok, :public_key.pem_entry_decode(pem_entry)}
+  catch
+    kind, error ->
+      ExPublicKey.normalize_error(kind, error)
+  end
+
+  defp sort_key_tup(key_tup) do
     case elem(key_tup, 0) do
       :RSAPrivateKey ->
         {:ok, RSAPrivateKey.from_sequence(key_tup)}
@@ -79,7 +82,8 @@ defmodule ExPublicKey do
 
   def sign(msg, sha, private_key) do
     pipe_matching x, {:ok, x},
-      RSAPrivateKey.as_sequence(private_key) |> sign_0(msg, sha)
+      RSAPrivateKey.as_sequence(private_key)
+      |> sign_0(msg, sha)
   end
 
   def sign(msg, private_key) do
@@ -94,7 +98,8 @@ defmodule ExPublicKey do
 
   def verify(msg, sha, signature, public_key) do
     pipe_matching x, {:ok, x},
-      RSAPublicKey.as_sequence(public_key) |> verify_0(msg, sha, signature)
+      RSAPublicKey.as_sequence(public_key)
+      |> verify_0(msg, sha, signature)
   end
 
   def verify(msg, signature, public_key) do
@@ -114,7 +119,9 @@ defmodule ExPublicKey do
 
   def encrypt_private(clear_text, private_key) do
     pipe_matching x, {:ok, x},
-      RSAPrivateKey.as_sequence(private_key) |> encrypt_private_0(clear_text) |> url_encode64
+      RSAPrivateKey.as_sequence(private_key)
+      |> encrypt_private_0(clear_text)
+      |> url_encode64
   end
 
   defp encrypt_public_0(rsa_pub_key_seq, clear_text) do
@@ -126,7 +133,9 @@ defmodule ExPublicKey do
 
   def encrypt_public(clear_text, public_key) do
     pipe_matching x, {:ok, x},
-      RSAPublicKey.as_sequence(public_key) |> encrypt_public_0(clear_text) |> url_encode64
+      RSAPublicKey.as_sequence(public_key)
+      |> encrypt_public_0(clear_text)
+      |> url_encode64
   end
 
   defp decrypt_private_0(cipher_bytes, private_key) do
@@ -145,7 +154,9 @@ defmodule ExPublicKey do
 
   def decrypt_private(cipher_text, private_key) do
     pipe_matching x, {:ok, x},
-      Base.url_decode64(cipher_text) |> decrypt_private_0(private_key) |> decrypt_private_1
+      Base.url_decode64(cipher_text)
+      |> decrypt_private_0(private_key)
+      |> decrypt_private_1
   end
 
   defp decrypt_public_0(cipher_bytes, public_key) do
@@ -164,6 +175,8 @@ defmodule ExPublicKey do
 
   def decrypt_public(cipher_text, public_key) do
     pipe_matching x, {:ok, x},
-      Base.url_decode64(cipher_text) |> decrypt_public_0(public_key) |> decrypt_public_1
+      Base.url_decode64(cipher_text)
+      |> decrypt_public_0(public_key)
+      |> decrypt_public_1
   end
 end
