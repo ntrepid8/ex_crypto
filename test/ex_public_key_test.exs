@@ -39,4 +39,8 @@ defmodule ExPublicKeyTest do
     end
   end
 
+  test "sign with private RSA key then verify signature with public RSA key" do
+
+  end
+
 end

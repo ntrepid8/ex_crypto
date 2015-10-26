@@ -23,4 +23,12 @@ defmodule ExPublicKey do
         raise ArgumentError, message: "invalid argument, expected one of[RSAPublicKey, RSAPrivateKey], found: #{x}"
     end
   end
+
+  def sign(msg, sha, key) do
+    :public_key.sign(msg, sha, key)
+  end
+
+  def sign(msg, key) do
+    ExPublicKey.sign(msg, :sha256, key)
+  end
 end
