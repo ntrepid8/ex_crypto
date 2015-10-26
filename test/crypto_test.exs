@@ -11,6 +11,16 @@ defmodule ExCryptoTest do
     assert(String.length(rand_string) == rand_char_count)
   end
 
+  test "generate random integers and test randomness" do
+    set_size = 100000
+    random_ints = for n <- 1..set_size, do: ExCrypto.rand_int(1, 100)
+
+    # do cursory check for randomness, average should be very near 50
+    average = Enum.sum(random_ints) / set_size
+    assert(average > 49.5)
+    assert(average < 50.5)
+  end
+
   test "read RSA private key in PEM format" do
 
     # generate a unique temp file name

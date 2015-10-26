@@ -19,4 +19,9 @@ defmodule ExCrypto do
     String.slice(rand_string, 0, num_chars)
   end
 
+  @spec rand_int(integer, integer) :: integer
+  def rand_int(low, high) do
+    :crypto.rand_uniform(low, high)
+  end
+
 end
