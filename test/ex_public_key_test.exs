@@ -47,8 +47,13 @@ defmodule ExPublicKeyTest do
     end
   end
 
-  test "sign with private RSA key then verify signature with public RSA key" do
-
+  test "sign with private RSA key then verify signature with public RSA key", context do
+    {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
+    {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
+    rand_chars = ExCrypto.rand_chars(16)
+    msg = "This is a test message to sign, complete with some entropy (#{rand_chars})."
+    signature = ExPublicKey.sign(msg, rsa_priv_key)
+    assert(ExPublicKey.verify(msg, signature, rsa_pub_key))
   end
 
 end

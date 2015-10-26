@@ -15,4 +15,13 @@ defmodule RSAPublicKey do
       public_modulus: elem(rsa_key_seq, 2)
     )
   end
+
+  def as_sequence(rsa_public_key) do
+    {
+      :RSAPublicKey,
+      rsa_public_key.public_exponent,
+      rsa_public_key.public_modulus,
+    }
+  end
+
 end

@@ -3,7 +3,7 @@ defmodule ExPublicKey do
   def load(file_path) do
     case File.read(file_path) do
       {:ok, key_string} ->
-        {:ok, ExPublicKey.loads(key_string)}
+        ExPublicKey.loads(key_string)
       {:error, reason} ->
         {:error, reason}
       _ ->
@@ -60,11 +60,19 @@ defmodule ExPublicKey do
     end
   end
 
-  def sign(msg, sha, key) do
-    :public_key.sign(msg, sha, key)
+  def sign(msg, sha, private_key) do
+    :public_key.sign(msg, sha, RSAPrivateKey.as_sequence(private_key))
   end
 
-  def sign(msg, key) do
-    ExPublicKey.sign(msg, :sha256, key)
+  def sign(msg, private_key) do
+    ExPublicKey.sign(msg, :sha256, private_key)
+  end
+
+  def verify(msg, sha, signature, public_key) do
+    :public_key.verify(msg, sha, signature, RSAPublicKey.as_sequence(public_key))
+  end
+
+  def verify(msg, signature, public_key) do
+    ExPublicKey.verify(msg, :sha256, signature, public_key)
   end
 end
