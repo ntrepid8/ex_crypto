@@ -25,7 +25,7 @@ defmodule ExCryptoTest do
     assert(average < 50.5)
   end
 
-  test "read RSA private key in PEM format" do
+  test "read RSA keys in PEM format" do
 
     # generate a unique temp file name
     rand_string = ExCrypto.rand_chars(4)
@@ -40,10 +40,17 @@ defmodule ExCryptoTest do
     System.cmd(
       "openssl", ["rsa", "-in", rsa_private_key_path, "-outform", "PEM", "-pubout", "-out", rsa_public_key_path])
 
+    # load the private key
     {:ok, priv_key_string} = File.read(rsa_private_key_path)
     rsa_priv_key = ExPublicKey.loads(priv_key_string)
     assert(is_map(rsa_priv_key))
     assert(rsa_priv_key.__struct__ == RSAPrivateKey)
+
+    # load the public key
+    {:ok, pub_key_string} = File.read(rsa_public_key_path)
+    rsa_pub_key = ExPublicKey.loads(pub_key_string)
+    assert(is_map(rsa_pub_key))
+    assert(rsa_pub_key.__struct__ == RSAPublicKey)
 
     # cleanup: delete the temp keys
     File.rm!(rsa_private_key_path)

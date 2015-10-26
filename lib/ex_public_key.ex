@@ -10,6 +10,8 @@ defmodule ExPublicKey do
     case elem(key_tup, 0) do
       :RSAPrivateKey ->
         RSAPrivateKey.from_sequence(key_tup)
+      :RSAPublicKey ->
+        RSAPublicKey.from_sequence(key_tup)
     end
   end
 end
