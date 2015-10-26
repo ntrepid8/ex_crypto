@@ -3,11 +3,20 @@ defmodule ExPublicKey do
   def load(file_path) do
     case File.read(file_path) do
       {:ok, key_string} ->
-        ExPublicKey.loads(key_string)
+        {:ok, ExPublicKey.loads(key_string)}
       {:error, reason} ->
-        raise File.error, reason
+        {:error, reason}
       _ ->
-        raise ArgumentError, message: "invalid argument"
+        {:error, "invalid argument"}
+    end
+  end
+
+  def load!(file_path) do
+    case load(file_path) do
+      {:ok, key} ->
+        key
+      {:error, reason} ->
+        raise ExCrypto.Error, reason: reason
     end
   end
   
@@ -15,11 +24,27 @@ defmodule ExPublicKey do
     pem_entries = :public_key.pem_decode(pem_string)
     case length(pem_entries) do
       0 ->
-        raise ArgumentError, message: "invalid argument"
+        {:error, "invalid argument"}
       x when x > 1 ->
-        raise ArgumentError, message: "found multiple PEM entries, expected only 1"
+        {:error, "found multiple PEM entries, expected only 1"}
       x when x == 1 ->
-        load_pem_entry(Enum.at(pem_entries, 0))
+        case load_pem_entry(Enum.at(pem_entries, 0)) do
+          {:error, reason} ->
+            {:error, reason}
+          {:ok, key} ->
+            {:ok, key}
+          _ ->
+            {:error, "something unexpected happened"}
+        end
+    end
+  end
+
+  def loads!(pem_string) do
+    case loads(pem_string) do
+      {:ok, key} ->
+        key
+      {:error, reason} ->
+        raise ExCrypto.Error, reason: reason
     end
   end
 
@@ -27,11 +52,11 @@ defmodule ExPublicKey do
     key_tup = :public_key.pem_entry_decode(pem_entry)
     case elem(key_tup, 0) do
       :RSAPrivateKey ->
-        RSAPrivateKey.from_sequence(key_tup)
+        {:ok, RSAPrivateKey.from_sequence(key_tup)}
       :RSAPublicKey ->
-        RSAPublicKey.from_sequence(key_tup)
+        {:ok, RSAPublicKey.from_sequence(key_tup)}
       x ->
-        raise ArgumentError, message: "invalid argument, expected one of[RSAPublicKey, RSAPrivateKey], found: #{x}"
+        {:error, "invalid argument, expected one of[RSAPublicKey, RSAPrivateKey], found: #{x}"}
     end
   end
 

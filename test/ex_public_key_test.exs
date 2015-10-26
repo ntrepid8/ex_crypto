@@ -30,20 +30,20 @@ defmodule ExPublicKeyTest do
     # IO.inspect context
     # load the private key
     {:ok, priv_key_string} = File.read(context[:rsa_private_key_path])
-    rsa_priv_key = ExPublicKey.loads(priv_key_string)
+    rsa_priv_key = ExPublicKey.loads!(priv_key_string)
     assert(is_map(rsa_priv_key))
     assert(rsa_priv_key.__struct__ == RSAPrivateKey)
 
     # load the public key
     {:ok, pub_key_string} = File.read(context[:rsa_public_key_path])
-    rsa_pub_key = ExPublicKey.loads(pub_key_string)
+    rsa_pub_key = ExPublicKey.loads!(pub_key_string)
     assert(is_map(rsa_pub_key))
     assert(rsa_pub_key.__struct__ == RSAPublicKey)
   end
 
-  test "try random string in key loads function and observe ArgumentError" do
-    assert_raise ArgumentError, fn ->
-      ExPublicKey.loads(ExCrypto.rand_chars(1000))
+  test "try random string in key loads function and observe ExCrypto.Error" do
+    assert_raise ExCrypto.Error, fn ->
+      ExPublicKey.loads!(ExCrypto.rand_chars(1000))
     end
   end
 
