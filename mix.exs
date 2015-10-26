@@ -9,10 +9,10 @@ defmodule ExCrypto.Mixfile do
   end
 
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :pipe]]
   end
 
   defp deps do
-    []
+    [{:pipe, github: "batate/elixir-pipes"}]
   end
 end

@@ -17,11 +17,16 @@ defmodule RSAPublicKey do
   end
 
   def as_sequence(rsa_public_key) do
-    {
-      :RSAPublicKey,
-      rsa_public_key.public_exponent,
-      rsa_public_key.public_modulus,
-    }
+    case rsa_public_key do
+      %RSAPublicKey{} ->
+        {:ok, {
+          :RSAPublicKey,
+          rsa_public_key.public_exponent,
+          rsa_public_key.public_modulus,
+        }}
+      _ ->
+        {:error, "invalid RSAPublicKey: #{rsa_public_key}"}
+    end
   end
 
 end

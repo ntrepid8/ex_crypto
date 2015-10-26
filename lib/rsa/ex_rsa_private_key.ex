@@ -39,19 +39,24 @@ defmodule RSAPrivateKey do
   end
 
   def as_sequence(rsa_private_key) do
-    {
-      :RSAPrivateKey,
-      rsa_private_key.version,
-      rsa_private_key.public_exponent,
-      rsa_private_key.public_modulus,
-      rsa_private_key.private_exponent,
-      rsa_private_key.prime_one,
-      rsa_private_key.prime_two,
-      rsa_private_key.exponent_one,
-      rsa_private_key.exponent_two,
-      rsa_private_key.ctr_coefficient,
-      rsa_private_key.other_prime_infos,
-    }
+    case rsa_private_key do
+      %RSAPrivateKey{} ->
+        {:ok, {
+          :RSAPrivateKey,
+          rsa_private_key.version,
+          rsa_private_key.public_exponent,
+          rsa_private_key.public_modulus,
+          rsa_private_key.private_exponent,
+          rsa_private_key.prime_one,
+          rsa_private_key.prime_two,
+          rsa_private_key.exponent_one,
+          rsa_private_key.exponent_two,
+          rsa_private_key.ctr_coefficient,
+          rsa_private_key.other_prime_infos,
+        }}
+      _ ->
+        {:error, "invalid RSAPrivateKey: #{inspect rsa_private_key}"}
+    end
   end
 
 end

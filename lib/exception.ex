@@ -2,6 +2,6 @@ defmodule ExCrypto.Error do
   defexception [reason: nil]
 
   def message(exception) do
-    "error: #{exception.reason}"
+    "ExCrypto.Error: #{exception.reason}"
   end
 end

@@ -1,4 +1,14 @@
 defmodule ExPublicKey do
+  use Pipe
+
+  def normalize_error(kind, error) do
+    case Exception.normalize(kind, error) do
+      %{message: message} ->
+        {:error, message}
+      x ->
+        {kind, x, System.stacktrace}
+    end
+  end
 
   def load(file_path) do
     case File.read(file_path) do
@@ -60,11 +70,21 @@ defmodule ExPublicKey do
     end
   end
 
+  defp sign_0()
+
   def sign(msg, sha, private_key) do
-    {:ok, :public_key.sign(msg, sha, RSAPrivateKey.as_sequence(private_key))}
-  catch
-    kind, error ->
-      {kind, Exception.normalize(kind, error), System.stacktrace}
+    case RSAPrivateKey.as_sequence(private_key) do
+      {:ok, rsa_priv_key_seq} ->
+        signature = try do
+          :public_key.sign(msg, sha, rsa_priv_key_seq)
+        catch
+          kind, error ->
+            ExPublicKey.normalize_error(kind, error)
+        end
+        {:ok, signature}
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   def sign(msg, private_key) do
@@ -72,39 +92,63 @@ defmodule ExPublicKey do
   end
 
   def verify(msg, sha, signature, public_key) do
-    :public_key.verify(msg, sha, signature, RSAPublicKey.as_sequence(public_key))
+    {:ok, rsa_pub_key_seq} = RSAPublicKey.as_sequence(public_key)
+    signature_valid = try do
+      :public_key.verify(msg, sha, signature, rsa_pub_key_seq)
+    catch
+      kind, error ->
+        ExPublicKey.normalize_error(kind, error)
+    end
+    {:ok, signature_valid}
   end
 
   def verify(msg, signature, public_key) do
     ExPublicKey.verify(msg, :sha256, signature, public_key)
   end
 
-  def encrypt_private(plain_text, private_key) do
-    cipher_text = :public_key.encrypt_private(plain_text, RSAPrivateKey.as_sequence(private_key))
-    Base.url_encode64(cipher_text)
+  def encrypt_private(clear_text, private_key) do
+    {:ok, rsa_priv_key_seq} = RSAPrivateKey.as_sequence(private_key)
+    cipher_bytes = try do
+      :public_key.encrypt_private(clear_text, rsa_priv_key_seq)
+    catch
+      kind, error ->
+        ExPublicKey.normalize_error(kind, error)
+    end
+    Base.url_encode64(cipher_bytes)
   end
 
-  def encrypt_public(plain_text, public_key) do
-    cipher_text = :public_key.encrypt_public(plain_text, RSAPublicKey.as_sequence(public_key))
-    Base.url_encode64(cipher_text)
+  def encrypt_public(clear_text, public_key) do
+    {:ok, rsa_pub_key_seq} = RSAPublicKey.as_sequence(public_key)
+    cipher_bytes = try do
+      :public_key.encrypt_public(clear_text, rsa_pub_key_seq)
+    catch
+      kind, error ->
+        ExPublicKey.normalize_error(kind, error)
+    end
+    {:ok, Base.url_encode64(cipher_bytes)}
   end
 
   def decrypt_private(cipher_text, private_key) do
-    case Base.url_decode64(cipher_text) do
-      {:ok, cipher_bytes} ->
-        {:ok, :public_key.decrypt_private(cipher_bytes, RSAPrivateKey.as_sequence(private_key))}
-      {:error, reason} ->
-        {:error, reason}
+    {:ok, cipher_bytes} = Base.url_decode64(cipher_text)
+    {:ok, rsa_priv_key_seq} = RSAPrivateKey.as_sequence(private_key)
+    clear_text = try do
+      :public_key.decrypt_private(cipher_bytes, rsa_priv_key_seq)
+    catch
+      kind, error ->
+        ExPublicKey.normalize_error(kind, error)
     end
-    
+    {:ok, clear_text}
   end
 
   def decrypt_public(cipher_text, public_key) do
-    case Base.url_decode64(cipher_text) do
-      {:ok, cipher_bytes} ->
-        {:ok, :public_key.decrypt_public(cipher_text, RSAPublicKey.as_sequence(public_key))}
-      {:error, reason} ->
-        {:error, reason}
+    {:ok, cipher_bytes} = Base.url_decode64(cipher_text)
+    {:ok, rsa_pub_key_seq} = RSAPublicKey.as_sequence(public_key)
+    clear_text = try do
+      :public_key.decrypt_public(cipher_bytes, rsa_pub_key_seq)
+    catch
+      kind, error ->
+        ExPublicKey.normalize_error(kind, error)
     end
+    {:ok, clear_text}
   end
 end

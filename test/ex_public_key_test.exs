@@ -52,8 +52,10 @@ defmodule ExPublicKeyTest do
     {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
     rand_chars = ExCrypto.rand_chars(16)
     msg = "This is a test message to sign, complete with some entropy (#{rand_chars})."
-    signature = ExPublicKey.sign(msg, rsa_priv_key)
-    assert(ExPublicKey.verify(msg, signature, rsa_pub_key))
+    {:ok, signature} = ExPublicKey.sign(msg, rsa_priv_key)
+    valid = ExPublicKey.verify(msg, signature, rsa_pub_key)
+    IO.inspect valid
+    assert(valid)
   end
 
   test "RSA public_key encrypt and RSA private_key decrypt", context do
@@ -61,12 +63,27 @@ defmodule ExPublicKeyTest do
     {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
     rand_chars = ExCrypto.rand_chars(16)
     plain_text = "This is a test message to encrypt, complete with some entropy (#{rand_chars})."
-    cipher_text = ExPublicKey.encrypt_public(plain_text, rsa_pub_key)
+    {:ok, cipher_text} = ExPublicKey.encrypt_public(plain_text, rsa_pub_key)
     assert(cipher_text != plain_text)
-    IO.inspect cipher_text
 
     {:ok, decrypted_plain_text} = ExPublicKey.decrypt_private(cipher_text, rsa_priv_key)
     assert(decrypted_plain_text == plain_text)
+  end
+
+  test "provoke exception from Erlang that must be handled" do
+    case ExPublicKey.sign("chuck norris", :sha256, "not really a key") do
+      {:ok, signature} ->
+        assert false, "this should have provoked an error: #{inspect signature}"
+      {:error, reason} ->
+        IO.inspect reason
+        assert true, "the right error was provoked: #{reason}"
+      {:error, error, stack_trace} ->
+        IO.inspect error
+        assert false, "the wrong error was provoked: #{error.message}"
+      x ->
+        # IO.inspect x
+        assert false, "something else happened"
+    end
   end
 
 end
