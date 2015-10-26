@@ -61,7 +61,10 @@ defmodule ExPublicKey do
   end
 
   def sign(msg, sha, private_key) do
-    :public_key.sign(msg, sha, RSAPrivateKey.as_sequence(private_key))
+    {:ok, :public_key.sign(msg, sha, RSAPrivateKey.as_sequence(private_key))}
+  catch
+    kind, error ->
+      {kind, Exception.normalize(kind, error), System.stacktrace}
   end
 
   def sign(msg, private_key) do
@@ -74,5 +77,34 @@ defmodule ExPublicKey do
 
   def verify(msg, signature, public_key) do
     ExPublicKey.verify(msg, :sha256, signature, public_key)
+  end
+
+  def encrypt_private(plain_text, private_key) do
+    cipher_text = :public_key.encrypt_private(plain_text, RSAPrivateKey.as_sequence(private_key))
+    Base.url_encode64(cipher_text)
+  end
+
+  def encrypt_public(plain_text, public_key) do
+    cipher_text = :public_key.encrypt_public(plain_text, RSAPublicKey.as_sequence(public_key))
+    Base.url_encode64(cipher_text)
+  end
+
+  def decrypt_private(cipher_text, private_key) do
+    case Base.url_decode64(cipher_text) do
+      {:ok, cipher_bytes} ->
+        {:ok, :public_key.decrypt_private(cipher_bytes, RSAPrivateKey.as_sequence(private_key))}
+      {:error, reason} ->
+        {:error, reason}
+    end
+    
+  end
+
+  def decrypt_public(cipher_text, public_key) do
+    case Base.url_decode64(cipher_text) do
+      {:ok, cipher_bytes} ->
+        {:ok, :public_key.decrypt_public(cipher_text, RSAPublicKey.as_sequence(public_key))}
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end

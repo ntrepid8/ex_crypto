@@ -56,4 +56,17 @@ defmodule ExPublicKeyTest do
     assert(ExPublicKey.verify(msg, signature, rsa_pub_key))
   end
 
+  test "RSA public_key encrypt and RSA private_key decrypt", context do
+    {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
+    {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
+    rand_chars = ExCrypto.rand_chars(16)
+    plain_text = "This is a test message to encrypt, complete with some entropy (#{rand_chars})."
+    cipher_text = ExPublicKey.encrypt_public(plain_text, rsa_pub_key)
+    assert(cipher_text != plain_text)
+    IO.inspect cipher_text
+
+    {:ok, decrypted_plain_text} = ExPublicKey.decrypt_private(cipher_text, rsa_priv_key)
+    assert(decrypted_plain_text == plain_text)
+  end
+
 end
