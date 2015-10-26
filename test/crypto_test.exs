@@ -5,10 +5,14 @@ defmodule ExCryptoTest do
     assert 1 + 1 == 2
   end
 
-  test "generate random characters" do
+  def run_rand_char_test() do
     rand_char_count = :crypto.rand_uniform(1, 100)
     rand_string = ExCrypto.rand_chars(rand_char_count)
     assert(String.length(rand_string) == rand_char_count)
+  end
+  
+  test "generate random characters" do
+    for n <- 1..100, do: run_rand_char_test()
   end
 
   test "generate random integers and test randomness" do

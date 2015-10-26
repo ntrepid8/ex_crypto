@@ -11,7 +11,7 @@ defmodule ExCrypto do
     block_bytes = 3
     block_chars = 4
     block_count = div(num_chars, block_chars)
-    block_partial = rem(num_chars, block_bytes)
+    block_partial = rem(num_chars, block_chars)
     if block_partial > 0 do
       block_count = block_count + 1
     end
