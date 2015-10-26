@@ -56,5 +56,11 @@ defmodule ExCryptoTest do
     File.rm!(rsa_private_key_path)
     File.rm!(rsa_public_key_path)
   end
+
+  test "try random string in key loads function and observe ArgumentError" do
+    assert_raise ArgumentError, fn ->
+      ExPublicKey.loads(ExCrypto.rand_chars(1000))
+    end
+  end
   
 end
