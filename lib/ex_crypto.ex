@@ -15,7 +15,7 @@ defmodule ExCrypto do
     if block_partial > 0 do
       block_count = block_count + 1
     end
-    rand_string = Base.url_encode64(:crypto.rand_bytes(block_count * block_bytes))
+    rand_string = Base.url_encode64(:crypto.strong_rand_bytes(block_count * block_bytes))
     String.slice(rand_string, 0, num_chars)
   end
 

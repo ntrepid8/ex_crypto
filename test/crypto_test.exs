@@ -5,6 +5,12 @@ defmodule ExCryptoTest do
     assert 1 + 1 == 2
   end
 
+  test "generate random characters" do
+    rand_char_count = :crypto.rand_uniform(1, 100)
+    rand_string = ExCrypto.rand_chars(rand_char_count)
+    assert(String.length(rand_string) == rand_char_count)
+  end
+
   test "read RSA private key in PEM format" do
 
     # generate a unique temp file name
