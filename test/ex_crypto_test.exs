@@ -25,4 +25,22 @@ defmodule ExCryptoTest do
     assert(average < 50.5)
   end
 
+  test "generate 128 bit AES key in bytes" do
+    {:ok, aes_128_key_bytes} = ExCrypto.generate_aes_key(:aes_128, :bytes)
+    assert(Kernel.is_bitstring(aes_128_key_bytes))
+    assert(byte_size(aes_128_key_bytes) == 128)
+  end
+
+  test "generate 192 bit AES key in bytes" do
+    {:ok, aes_192_key_bytes} = ExCrypto.generate_aes_key(:aes_192, :bytes)
+    assert(Kernel.is_bitstring(aes_192_key_bytes))
+    assert(byte_size(aes_192_key_bytes) == 192)
+  end
+
+  test "generate 256 bit AES key in bytes" do
+    {:ok, aes_256_key_bytes} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+    assert(Kernel.is_bitstring(aes_256_key_bytes))
+    assert(byte_size(aes_256_key_bytes) == 256)
+  end
+
 end
