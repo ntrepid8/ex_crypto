@@ -8,6 +8,12 @@ defmodule ExCrypto do
 
   use Pipe
 
+  defmacro pipe_ok(pipes) do
+    quote do
+      pipe_matching(x, {:ok, x}, unquote(pipes))
+    end
+  end
+
   def normalize_error(kind, error) do
     case Exception.normalize(kind, error) do
       %{message: message} ->
@@ -41,12 +47,14 @@ defmodule ExCrypto do
     :crypto.rand_uniform(low, high)
   end
 
+  @spec rand_bytes(integer) :: {atom, bitstring}
   def rand_bytes(length) do
     {:ok, :crypto.strong_rand_bytes(length)}
   catch
     kind, error -> ExPublicKey.normalize_error(kind, error)
   end
 
+  @spec generate_aes_key(atom, atom) :: {atom, bitstring|String.t}
   def generate_aes_key(key_type, key_format) do
     case {key_type, key_format} do
       {:aes_128, :base64} -> pipe_ok rand_bytes(128) |> url_encode64
@@ -61,10 +69,6 @@ defmodule ExCrypto do
 
   defp url_encode64(bytes_to_encode) do
     {:ok, Base.url_encode64(bytes_to_encode)}
-  end
-
-  defp pipe_ok(chain) do
-    pipe_matching x, {:ok, x}, chain
   end
 
 end
