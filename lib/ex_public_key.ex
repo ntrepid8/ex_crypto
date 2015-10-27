@@ -1,4 +1,13 @@
 defmodule ExPublicKey do
+
+  defmacro __using__(_) do
+    quote do
+      import ExPublicKey
+      alias ExPublicKey.RSAPublicKey, as: RSAPublicKey
+      alias ExPublicKey.RSAPrivateKey, as: RSAPrivateKey
+    end
+  end
+
   use Pipe
 
   def normalize_error(kind, error) do
@@ -65,11 +74,11 @@ defmodule ExPublicKey do
   defp sort_key_tup(key_tup) do
     case elem(key_tup, 0) do
       :RSAPrivateKey ->
-        {:ok, RSAPrivateKey.from_sequence(key_tup)}
+        {:ok, ExPublicKey.RSAPrivateKey.from_sequence(key_tup)}
       :RSAPublicKey ->
-        {:ok, RSAPublicKey.from_sequence(key_tup)}
+        {:ok, ExPublicKey.RSAPublicKey.from_sequence(key_tup)}
       x ->
-        {:error, "invalid argument, expected one of[RSAPublicKey, RSAPrivateKey], found: #{x}"}
+        {:error, "invalid argument, expected one of[ExPublicKey.RSAPublicKey, ExPublicKey.RSAPrivateKey], found: #{x}"}
     end
   end
 
@@ -82,7 +91,7 @@ defmodule ExPublicKey do
 
   def sign(msg, sha, private_key) do
     pipe_matching x, {:ok, x},
-      RSAPrivateKey.as_sequence(private_key)
+      ExPublicKey.RSAPrivateKey.as_sequence(private_key)
       |> sign_0(msg, sha)
   end
 
@@ -98,7 +107,7 @@ defmodule ExPublicKey do
 
   def verify(msg, sha, signature, public_key) do
     pipe_matching x, {:ok, x},
-      RSAPublicKey.as_sequence(public_key)
+      ExPublicKey.RSAPublicKey.as_sequence(public_key)
       |> verify_0(msg, sha, signature)
   end
 
@@ -119,7 +128,7 @@ defmodule ExPublicKey do
 
   def encrypt_private(clear_text, private_key) do
     pipe_matching x, {:ok, x},
-      RSAPrivateKey.as_sequence(private_key)
+      ExPublicKey.RSAPrivateKey.as_sequence(private_key)
       |> encrypt_private_0(clear_text)
       |> url_encode64
   end
@@ -133,13 +142,13 @@ defmodule ExPublicKey do
 
   def encrypt_public(clear_text, public_key) do
     pipe_matching x, {:ok, x},
-      RSAPublicKey.as_sequence(public_key)
+      ExPublicKey.RSAPublicKey.as_sequence(public_key)
       |> encrypt_public_0(clear_text)
       |> url_encode64
   end
 
   defp decrypt_private_0(cipher_bytes, private_key) do
-    case RSAPrivateKey.as_sequence(private_key) do
+    case ExPublicKey.RSAPrivateKey.as_sequence(private_key) do
       {:ok, rsa_priv_key_seq} -> {:ok, [cipher_bytes, rsa_priv_key_seq]}
       {:error, reason} -> {:error, reason}
     end
@@ -160,7 +169,7 @@ defmodule ExPublicKey do
   end
 
   defp decrypt_public_0(cipher_bytes, public_key) do
-    case RSAPublicKey.as_sequence(public_key) do
+    case ExPublicKey.RSAPublicKey.as_sequence(public_key) do
       {:ok, rsa_pub_key_seq} -> {:ok, [cipher_bytes, rsa_pub_key_seq]}
       {:error, reason} -> {:error, reason}
     end

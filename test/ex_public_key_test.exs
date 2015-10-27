@@ -1,5 +1,7 @@
 defmodule ExPublicKeyTest do
   use ExUnit.Case
+  alias ExPublicKey.RSAPublicKey, as: RSAPublicKey
+  alias ExPublicKey.RSAPrivateKey, as: RSAPrivateKey
 
   setup do
     # generate a RSA key pair

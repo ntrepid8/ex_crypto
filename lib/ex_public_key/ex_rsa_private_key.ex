@@ -1,4 +1,5 @@
-defmodule RSAPrivateKey do
+defmodule ExPublicKey.RSAPrivateKey do
+
   defstruct version: nil,
             public_exponent: nil,
             public_modulus: nil,
@@ -10,7 +11,7 @@ defmodule RSAPrivateKey do
             ctr_coefficient: nil,
             other_prime_infos: nil
 
-  @type t :: %RSAPrivateKey{
+  @type t :: %ExPublicKey.RSAPrivateKey{
     version: atom,
     public_exponent: integer,
     public_modulus: integer,
@@ -24,7 +25,7 @@ defmodule RSAPrivateKey do
   }
 
   def from_sequence(rsa_key_seq) do
-    %RSAPrivateKey{} |> struct(
+    %ExPublicKey.RSAPrivateKey{} |> struct(
       version: elem(rsa_key_seq, 1),
       public_exponent: elem(rsa_key_seq, 2),
       public_modulus: elem(rsa_key_seq, 3),
@@ -40,7 +41,7 @@ defmodule RSAPrivateKey do
 
   def as_sequence(rsa_private_key) do
     case rsa_private_key do
-      %RSAPrivateKey{} ->
+      %ExPublicKey.RSAPrivateKey{} ->
         {:ok, {
           :RSAPrivateKey,
           rsa_private_key.version,
@@ -55,7 +56,7 @@ defmodule RSAPrivateKey do
           rsa_private_key.other_prime_infos,
         }}
       _ ->
-        {:error, "invalid RSAPrivateKey: #{inspect rsa_private_key}"}
+        {:error, "invalid ExPublicKey.RSAPrivateKey: #{inspect rsa_private_key}"}
     end
   end
 

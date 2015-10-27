@@ -1,5 +1,11 @@
 defmodule ExCrypto do
-  
+
+  defmacro __using__(_) do
+    quote do
+      import ExCrypto
+    end
+  end
+
   @doc """
   Returns random characters in "blocks". Each block is a string 
   of 4 chars.  Each block represents 24 bits of entropy, base64 encoded.
