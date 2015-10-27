@@ -86,6 +86,8 @@ iex(4)> {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_256, :base64)
  "Bs_BzhuwseEA8ZUvuEY0mq9Rmlv6cSoU_RaYD14Q62HiN_kJ4FiaW0YYppf1ffYPQ56xuitxQtYAnaeP-Q5l1WPh5aExdwCG_PUm5g-MlOUA1XSSP2RvuQqAiHzazIzjGVSIcl0Gr7TSLPOoIQrPshMNaA4j3SGZ3lAOqO1quvXtDn-9Sxwr5dwV7VzOIvXRwb0GbZeYp8lnVJgeqHl8cEhUTfT_h9Pm7tU2CFeHZCDK8ntFT_t4q6VlcBcvw_Pj3CGcVSmpmCHMKW1brt6jXGBijqSTdbjYDZnCx2Q44VoYqMMZ1U2GnVyjc-ZuwugwGGqQ7UEqV_TOMjbK6Oxx-Q=="}
  ```
 
+ In both examples the `:bytes` atom can be substituted for `:base64` if you wish to receive your key as a `bitstring` rather than as a base64 encoded unicode string.
+
  As you can see the keys grow longer in order of bit length.  A 128 bit key is more than sufficient for most applications but if you are slightly more paranoid than average use a 192 bit key.
 
  If your paranoia knows no bounds or you are protecting state secrets from nation-state owned quantum computers use a 256 bit key.
