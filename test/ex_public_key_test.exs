@@ -55,7 +55,7 @@ defmodule ExPublicKeyTest do
     rand_chars = ExCrypto.rand_chars(16)
     msg = "This is a test message to sign, complete with some entropy (#{rand_chars})."
     {:ok, signature} = ExPublicKey.sign(msg, rsa_priv_key)
-    valid = ExPublicKey.verify(msg, signature, rsa_pub_key)
+    {:ok, valid} = ExPublicKey.verify(msg, signature, rsa_pub_key)
     IO.inspect valid
     assert(valid)
   end
