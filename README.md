@@ -77,11 +77,11 @@ iex(2)> {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_128, :base64)
  You can also generate 192/256 bit AES keys like this:
 
  ```elixir
- iex(3)> {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_192, :base64)
+ iex(3)> {:ok, aes_192_key} = ExCrypto.generate_aes_key(:aes_192, :base64)
 {:ok,
  "P173Su55_bFR4WEf4SmKC4yKAX-IT9-83rbS6RSIPxEHf7uTEvyr969C3ZCkbSh5dJrWd35zjYQM-l5DpGzdIztxCqvN9myGYUdrfn9D2PRh9Y7XgQWRqYJ6FE67EHcNgJWrxEQ_HRt5jBczoY-34AZAN3RVcVqXrwGZw6ISJcyKVc30nJOBS9N4QeQWw2bPrppfzA43-_hAVfjEKCUyPzi2zlG2WUsaeKS4vOOmVAzkC0IPbONqVtzlxiFwbr7I"}
 
-iex(4)> {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_256, :base64)
+iex(4)> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :base64)
 {:ok,
  "Bs_BzhuwseEA8ZUvuEY0mq9Rmlv6cSoU_RaYD14Q62HiN_kJ4FiaW0YYppf1ffYPQ56xuitxQtYAnaeP-Q5l1WPh5aExdwCG_PUm5g-MlOUA1XSSP2RvuQqAiHzazIzjGVSIcl0Gr7TSLPOoIQrPshMNaA4j3SGZ3lAOqO1quvXtDn-9Sxwr5dwV7VzOIvXRwb0GbZeYp8lnVJgeqHl8cEhUTfT_h9Pm7tU2CFeHZCDK8ntFT_t4q6VlcBcvw_Pj3CGcVSmpmCHMKW1brt6jXGBijqSTdbjYDZnCx2Q44VoYqMMZ1U2GnVyjc-ZuwugwGGqQ7UEqV_TOMjbK6Oxx-Q=="}
  ```
