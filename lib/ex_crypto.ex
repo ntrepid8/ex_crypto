@@ -23,6 +23,10 @@ defmodule ExCrypto do
     end
   end
 
+  def detail_normalize_error(kind, error) do
+    {kind, Exception.normalize(kind, error), System.stacktrace}
+  end
+
   @doc """
   Returns random characters in "blocks". Each block is a string 
   of 4 chars.  Each block represents 24 bits of entropy, base64 encoded.
@@ -57,18 +61,30 @@ defmodule ExCrypto do
   @spec generate_aes_key(atom, atom) :: {atom, bitstring|String.t}
   def generate_aes_key(key_type, key_format) do
     case {key_type, key_format} do
-      {:aes_128, :base64} -> pipe_ok rand_bytes(128) |> url_encode64
-      {:aes_128, :bytes} -> rand_bytes(128)
-      {:aes_192, :base64} -> pipe_ok rand_bytes(192) |> url_encode64
-      {:aes_192, :bytes} -> rand_bytes(192)
-      {:aes_256, :base64} -> pipe_ok rand_bytes(256) |> url_encode64
-      {:aes_256, :bytes} -> rand_bytes(256)
+      {:aes_128, :base64} -> pipe_ok rand_bytes(16) |> url_encode64
+      {:aes_128, :bytes} -> rand_bytes(16)
+      {:aes_192, :base64} -> pipe_ok rand_bytes(24) |> url_encode64
+      {:aes_192, :bytes} -> rand_bytes(24)
+      {:aes_256, :base64} -> pipe_ok rand_bytes(32) |> url_encode64
+      {:aes_256, :bytes} -> rand_bytes(32)
       _ -> {:error, "invalid key_type/key_format"}
     end
   end
 
   defp url_encode64(bytes_to_encode) do
     {:ok, Base.url_encode64(bytes_to_encode)}
+  end
+
+  def encrypt(key, initialization_vector, authentication_data, clear_text) do
+    {:ok, :crypto.block_encrypt(:aes_gcm, key, initialization_vector, {authentication_data, clear_text})}
+  catch
+    kind, error -> normalize_error(kind, error)
+  end
+
+  def decrypt(key, initialization_vector, authentication_data, cipher_text, cipher_tag) do
+    {:ok, :crypto.block_decrypt(:aes_gcm, key, initialization_vector, {authentication_data, cipher_text, cipher_tag})}
+  catch
+    kind, error -> normalize_error(kind, error)
   end
 
 end
