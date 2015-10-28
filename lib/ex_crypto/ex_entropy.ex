@@ -1,42 +1,65 @@
 defmodule ExEntropy do
 
-  def measure_entropy(value) when is_binary(value) do
-    byte_length = byte_size(value)
-    bit_list = for << a::1 <- value >>, do: a
-    bit_count = length(bit_list)
-    IO.puts bit_count
-    bit_sum = sum_list(bit_list)
-    IO.puts bit_sum
-    bit_entropy = bit_sum / bit_count
-    IO.puts "bit_entropy: #{bit_entropy}"
+  @doc """
+  Compute the Shannon entropy of a binary value.
 
-    # byte entropy
-    byte_list = for << a::8 <- value >>, do: a
-    IO.puts byte_list
-    byte_sums = for x <- 1..255, do: byte_count(x, byte_list) 
-    IO.puts "byte_sums: #{byte_sums}"
+  reference:
+
+  - <http://stackoverflow.com/questions/990477/how-to-calculate-the-entropy-of-a-file>
+  - <https://en.wikipedia.org/wiki/Entropy_(information_theory)>
+  """
+  @spec shannon_entropy(binary, integer) :: float
+  def shannon_entropy(value, exponent) when is_binary(value) do
+    # convert the binary value into a list with exponent as one of [1, 8]
+    val_list = gen_val_list(value, exponent)
+
+    val_range = round :math.pow(2, exponent) - 1
+    val_accumulator = for x <- 0..val_range, into: %{}, do: {x, 0}
+
+    # accumulate occurrence counts
+    accumulated_occurances = count_occurances(val_accumulator, val_list)
+
+    # transform the map of occurrence counts into a list
+    ao_list = Enum.map(accumulated_occurances, fn {k, v} -> v end)
+
+    # compute Shannon's entropy
+    shannon_entropy_0(0, length(val_list), length(ao_list), ao_list)
   end
 
-  defp sum_list([]) do
-    0
+  def shannon_entropy(value) when is_binary(value) do
+    shannon_entropy(value, 8)  # byte blocks by default
   end
 
-  defp sum_list([h|t]) do
-    h + sum_list(t)
+  defp shannon_entropy_0(entropy, block_count, block_range, []) do
+    entropy
   end
 
-  def byte_count(target, []) do
-    0
-  end
-
-  def byte_count(target, [h|t]) do
-    # IO.puts "target?: #{target} == #{h}"
+  defp shannon_entropy_0(entropy, block_count, block_range, [h|t]) do
     case h do
-      target -> 
-        # IO.puts "byte_count_match: #{target}"
-        1 + byte_count(target, t)
+      0 -> shannon_entropy_0(entropy, block_count, block_range, t)
       _ -> 
-        0 + byte_count(target, t)
+        p = 1.0 * h / block_count
+        udpated_entropy = entropy - (p * (:math.log(p) / :math.log(block_range)))
+        shannon_entropy_0(udpated_entropy, block_count, block_range, t)
+    end
+  end
+
+  defp count_occurances(accumulator, []) do
+    accumulator
+  end
+
+  defp count_occurances(accumulator, [h|t]) do
+    c_0 = Map.get(accumulator, h, 0)
+    count_occurances(Map.put(accumulator, h, c_0+1), t)
+  end
+
+  defp gen_val_list(value, exponent) do
+    case exponent do
+      1 -> for << x::1 <- value >>, do: x    # bits
+      8 -> for << x::8 <- value >>, do: x    # bytes
+      10 -> for << x::10 <- value >>, do: x  # kilobytes
+      16 -> for << x::16 <- value >>, do: x  # hex
+      20 -> for << x::20 <- value >>, do: x  # megabytes
     end
   end
 
