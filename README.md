@@ -1,10 +1,30 @@
 # ExCrypto
 
-A wrapper around the Erlang `crypto` and `public_key` modules for elixir.
+The goal of `ExCrypto` and `ExPublicKey` is to expose a subset of the functionality from the Erlang modules `crypto` and `public_key` so that writing secure Elixir applications is a little bit easier without being overwhelming. In many functions some sane defaults are provided to decrease the complexity of implementing those functions in your own code.
 
 ## Using ExPublicKey
 
-The `ExPublicKey` module provides functions for working with RSA public/private key operations.
+The `ExPublicKey` module provides functions for working with RSA public/private key operations. There are a couple common uses for public-key cryptography:
+
+- [Authenticate a message](#authenticate-a-message)
+- [Transmit a shared secret](#transmit-a-shared-secret) (session key)
+
+### Authenticate a message
+
+The goal of `ExPublicKey.sign` and `ExPublicKey.verify` is that the recipient of a message can identify the sender. This can be accomplished as follows:
+
+*Note: assume the message is a JSON payload.*
+
+- Sender
+  - serialize the JSON to a string
+  - hash, time-stamp, and sign with your private-key
+- Receiver
+  - ensure the time-stamp is within the current window
+  - verify the signature with the sender's public-key
+
+### Transmit a shared secret
+
+*(in progress)*
 
 ### Load the keys from PEM format files
 
