@@ -41,7 +41,6 @@ ts = Date.now |> Date.to_secs
 # add a time-stamp
 ts_msg_serialized = "#{ts}|#{msg_serialized}"
 
-
 # generate a secure hash using SHA256 and sign the message with the private key
 {:ok, signature} = ExPublicKey.sign(ts_msg_serialized, rsa_priv_key)
 
