@@ -87,6 +87,33 @@ defmodule ExCrypto do
 
   @doc """
   Returns an AES key.
+
+  Accepts a `key_type` (`:aes_128`|`:aes_192`|`:aes_256`) and `key_format` 
+  (`:base64`|`:bytes`) to determine type of key to produce.
+
+  ## Examples
+
+      iex> ExCrypto.generate_aes_key(:aes_256, :base64)
+      {:ok, "fvguC4ig4gCKQfrfQ9L3afLBJdjabA1e6iNH2oBEuTU="}
+
+      iex> ExCrypto.generate_aes_key(:aes_256, :bytes)
+      {:ok,
+       <<181, 0, 19, 108, 87, 27, 143, 104, 195, 215, 160, 141, 42, 246, 248, 231, 135, 58, 179, 251, 211, 110, 78, 35, 214, 167, 233, 184, 86, 151, 53, 79>>}
+
+      iex> ExCrypto.generate_aes_key(:aes_192, :base64)
+      {:ok, "itsyAgZ2zwF0j9p8WhAXsAyKPNyFsbF3"}
+      
+      iex> ExCrypto.generate_aes_key(:aes_192, :bytes)
+      {:ok,
+       <<174, 156, 244, 175, 90, 157, 206, 70, 58, 9, 244, 202, 243, 192, 138, 177, 30, 164, 152, 27, 106, 160, 251, 46>>}
+
+      iex> ExCrypto.generate_aes_key(:aes_128, :base64)
+      {:ok, "Gh2ahuaKED2gfw0I2k4Sbw=="}
+      
+      iex> ExCrypto.generate_aes_key(:aes_128, :bytes)
+      {:ok,
+       <<141, 112, 245, 211, 119, 226, 108, 244, 23, 180, 228, 69, 47, 162, 221, 10>>}
+
   """
   @spec generate_aes_key(atom, atom) :: {:ok, binary} | {:error, binary}
   def generate_aes_key(key_type, key_format) do
