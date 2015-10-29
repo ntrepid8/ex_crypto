@@ -261,11 +261,52 @@ defmodule ExCrypto do
     kind, error -> normalize_error(kind, error)
   end
 
+  @doc """
+  Join the three parts of an encrypted payload and encode using `Base.url_encode64`.
+
+  This produces a Unicode `payload` string like this:
+
+      init_vec   <> cipher_text <> cipher_tag
+      [128 bits] <>  [?? bits]  <> [128 bits]
+
+  This format is convenient to include in HTTP request bodies.  It can also be used with JSON transport formats.
+
+  ## Examples
+
+      iex> clear_text = "my-clear-text"
+      iex> auth_data = "my-auth-data"
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, {ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {:ok, encoded_payload} = ExCrypto.encode_payload(init_vec, cipher_text, cipher_tag)
+      iex> assert(String.valid?(encoded_payload))
+      true
+  """
+  @spec encode_payload(binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def encode_payload(initialization_vector, cipher_text, cipher_tag) do
-    {:ok, encoded_parts} = url_encode64(initialization_vector <> cipher_text <> cipher_tag)
-    {:ok, encoded_parts}
+    url_encode64(initialization_vector <> cipher_text <> cipher_tag)
   end
 
+  @doc """
+  Split and decode the three parts of an encrypted payload and encode using `Base.url_decode64`.
+
+  ## Examples
+
+      iex> clear_text = "my-clear-text"
+      iex> auth_data = "my-auth-data"
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, {ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {:ok, encoded_payload} = ExCrypto.encode_payload(init_vec, cipher_text, cipher_tag)
+      iex> assert(String.valid?(encoded_payload))
+      true
+      iex> {:ok, {d_init_vec, d_cipher_text, d_cipher_tag}} = ExCrypto.decode_payload(encoded_payload)
+      iex> assert(d_init_vec == init_vec)
+      true
+      iex> assert(d_cipher_text == cipher_text)
+      true
+      iex> assert(d_cipher_tag == cipher_tag)
+      true
+  """
+  @spec decode_payload(binary) :: {:ok, {binary, binary, binary}} | {:error, binary}
   def decode_payload(encoded_parts) do
     {:ok, decoded_parts} = Base.url_decode64(encoded_parts)
     decoded_length = byte_size(decoded_parts)
