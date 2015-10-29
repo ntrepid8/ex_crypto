@@ -43,12 +43,17 @@ defmodule ExCrypto do
 
   ## Examples
 
-      iex> ExCrypto.rand_chars(24)
-      "njZ7bbu6UmLbEtw5JpaKGd4s"
-      iex> ExCrypto.rand_chars(32)
-      "Mk7I3SMCz2kKMUFYZcch7X-yFl2AjUGa"
-      iex> ExCrypto.rand_chars(44)
-      "9KS1uHmFBfZB4wFdPmnapw4mi7lpuVuixSuezcIn-YOe"
+      iex> rand_string = ExCrypto.rand_chars(24)
+      iex> assert(String.length(rand_string) == 24)
+      true
+      
+      iex> rand_string = ExCrypto.rand_chars(32)
+      iex> assert(String.length(rand_string) == 32)
+      true
+      
+      iex> rand_string = ExCrypto.rand_chars(44)
+      iex> assert(String.length(rand_string) == 44)
+      true
   """
   @spec rand_chars(integer) :: String.t
   def rand_chars(num_chars) do
@@ -71,12 +76,23 @@ defmodule ExCrypto do
 
   ## Examples
 
-      iex> ExCrypto.rand_int(2, 20)
-      18
-      iex> ExCrypto.rand_int(2, 20)
-      4
-      iex> ExCrypto.rand_int(2, 20)
-      6
+      iex> rand_int = ExCrypto.rand_int(2, 20)
+      iex> assert(rand_int > 1)
+      true
+      iex> assert(rand_int < 20)
+      true
+      
+      iex> rand_int = ExCrypto.rand_int(23, 99)
+      iex> assert(rand_int > 23)
+      true
+      iex> assert(rand_int < 99)
+      true
+      
+      iex> rand_int = ExCrypto.rand_int(212, 736)
+      iex> assert(rand_int > 212)
+      true
+      iex> assert(rand_int < 736)
+      true
   """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
@@ -88,15 +104,23 @@ defmodule ExCrypto do
 
   ## Examples
 
-      iex> ExCrypto.rand_bytes(16)
-      {:ok,
-       <<57, 120, 189, 13, 191, 164, 215, 31, 182, 64, 145, 125, 64, 149, 223, 243>>}
-      iex> ExCrypto.rand_bytes(24)
-      {:ok,
-       <<190, 157, 28, 47, 167, 217, 199, 159, 188, 20, 29, 8, 209, 146, 104, 200, 210, 100, 115, 143, 157, 20, 196, 69>>}
-      iex> ExCrypto.rand_bytes(32)
-      {:ok,
-       <<64, 200, 58, 1, 149, 140, 63, 2, 50, 188, 216, 210, 42, 25, 163, 194, 31, 92, 234, 182, 242, 201, 113, 12, 240, 105, 231, 47, 113, 31, 217, 199>>}
+      iex> {:ok, rand_bytes} = ExCrypto.rand_bytes(16)
+      iex> assert(byte_size(rand_bytes) == 16)
+      true
+      iex> assert(bit_size(rand_bytes) == 128)
+      true
+      
+      iex> {:ok, rand_bytes} = ExCrypto.rand_bytes(24)
+      iex> assert(byte_size(rand_bytes) == 24)
+      true
+      iex> assert(bit_size(rand_bytes) == 192)
+      true
+
+      iex> {:ok, rand_bytes} = ExCrypto.rand_bytes(32)
+      iex> assert(byte_size(rand_bytes) == 32)
+      true
+      iex> assert(bit_size(rand_bytes) == 256)
+      true
   """
   @spec rand_bytes(integer) :: {:ok, binary} | {:error, binary}
   def rand_bytes(length) do
@@ -113,27 +137,29 @@ defmodule ExCrypto do
 
   ## Examples
 
-      iex> ExCrypto.generate_aes_key(:aes_256, :base64)
-      {:ok, "fvguC4ig4gCKQfrfQ9L3afLBJdjabA1e6iNH2oBEuTU="}
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> assert bit_size(key) == 256
+      true
 
-      iex> ExCrypto.generate_aes_key(:aes_256, :bytes)
-      {:ok,
-       <<181, 0, 19, 108, 87, 27, 143, 104, 195, 215, 160, 141, 42, 246, 248, 231, 135, 58, 179, 251, 211, 110, 78, 35, 214, 167, 233, 184, 86, 151, 53, 79>>}
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_256, :base64)
+      iex> assert String.length(key) == 44
+      true
 
-      iex> ExCrypto.generate_aes_key(:aes_192, :base64)
-      {:ok, "itsyAgZ2zwF0j9p8WhAXsAyKPNyFsbF3"}
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :bytes)
+      iex> assert bit_size(key) == 192
+      true
+
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :base64)
+      iex> assert String.length(key) == 32
+      true
       
-      iex> ExCrypto.generate_aes_key(:aes_192, :bytes)
-      {:ok,
-       <<174, 156, 244, 175, 90, 157, 206, 70, 58, 9, 244, 202, 243, 192, 138, 177, 30, 164, 152, 27, 106, 160, 251, 46>>}
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :bytes)
+      iex> assert bit_size(key) == 128
+      true
 
-      iex> ExCrypto.generate_aes_key(:aes_128, :base64)
-      {:ok, "Gh2ahuaKED2gfw0I2k4Sbw=="}
-      
-      iex> ExCrypto.generate_aes_key(:aes_128, :bytes)
-      {:ok,
-       <<141, 112, 245, 211, 119, 226, 108, 244, 23, 180, 228, 69, 47, 162, 221, 10>>}
-
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :base64)
+      iex> assert String.length(key) == 24
+      true
   """
   @spec generate_aes_key(atom, atom) :: {:ok, binary} | {:error, binary}
   def generate_aes_key(key_type, key_format) do
@@ -163,27 +189,22 @@ defmodule ExCrypto do
 
   ## Examples
 
+      iex> clear_text = "my-clear-text"
+      iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      {:ok,
-       <<102, 61, 103, 218, 73, 12, 233, 190, 254, 123, 108, 9, 230, 183, 7, 46, 233, 75, 1, 147, 143, 167, 78, 232, 126, 187, 153, 239, 128, 133, 76, 25>>}
-      
       iex> {:ok, iv} = ExCrypto.rand_bytes(16)
-      {:ok,
-       <<137, 18, 92, 222, 46, 164, 131, 171, 232, 216, 144, 51, 227, 240, 186, 116>>}
-      
-      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, "my-auth-data", iv, "my-clear-text")
-      {:ok,
-       {"my-auth-data",
-        <<137, 18, 92, 222, 46, 164, 131, 171, 232, 216, 144, 51, 227, 240, 186, 116>>,
-        <<242, 162, 159, 156, 28, 117, 128, 247, 48, 128, 25, 47, 151>>,
-        <<160, 113, 232, 103, 162, 0, 75, 69, 31, 50, 186, 213, 72, 239, 229, 208>>}}
-
+      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, iv, clear_text)
+      iex> {iv, cipher_text, cipher_tag} = payload
+      iex> assert(is_bitstring(cipher_text))
+      true
+      iex> assert(bit_size(cipher_tag) == 128)
+      true
 
   """
-  @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, binary, binary, binary}} | {:error, binary}
+  @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
   def encrypt(key, authentication_data, initialization_vector, clear_text) do
     case :crypto.block_encrypt(:aes_gcm, key, initialization_vector, {authentication_data, clear_text}) do
-      {cipher_text, cipher_tag} -> {:ok, {authentication_data, initialization_vector, cipher_text, cipher_tag}}
+      {cipher_text, cipher_tag} -> {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
       x -> {:error, x}
     end
   catch
@@ -191,26 +212,25 @@ defmodule ExCrypto do
   end
 
   @doc """
-  Encrypt a `binary` with AES in GCM mode.
+  Same as `encrypt/4` except the `initialization_vector` is automatically.
 
   A 128 bit `initialization_vector` is generated automatically by `encrypt/3`. It returns a tuple 
   containing the `initialization_vector`, the `cipher_text` and the `cipher_tag`.
 
   ## Examples
 
+      iex> clear_text = "my-clear-text"
+      iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      {:ok,
-       <<94, 197, 140, 75, 88, 191, 233, 230, 189, 96, 86, 107, 179, 243, 111, 10, 201, 22, 84, 219, 90, 70, 107, 225, 13, 196, 147, 56, 34, 33, 22, 107>>}
-      
-      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, "my-auth-data", "my-clear-text")
-      {:ok,
-       {"my-auth-data",
-        <<11, 186, 216, 183, 181, 243, 68, 244, 207, 146, 117, 130, 3, 59, 190, 68>>,
-        <<57, 186, 115, 169, 171, 156, 120, 252, 200, 124, 218, 194, 216>>,
-        <<148, 154, 168, 69, 139, 255, 61, 31, 203, 159, 224, 13, 50, 92, 152, 32>>}}
+      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {init_vec, cipher_text, cipher_tag} = payload
+      iex> assert(is_bitstring(cipher_text))
+      true
+      iex> assert(bit_size(cipher_tag) == 128)
+      true
 
   """
-  @spec encrypt(binary, binary, binary) :: {:ok, {binary, binary, binary, binary}} | {:error, binary}
+  @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
   def encrypt(key, authentication_data, clear_text) do
     {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
     encrypt(key, authentication_data, initialization_vector, clear_text)
@@ -225,19 +245,14 @@ defmodule ExCrypto do
 
   ## Examples
 
+      iex> clear_text = "my-clear-text"
+      iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      {:ok,
-       <<94, 197, 140, 75, 88, 191, 233, 230, 189, 96, 86, 107, 179, 243, 111, 10, 201, 22, 84, 219, 90, 70, 107, 225, 13, 196, 147, 56, 34, 33, 22, 107>>}
-      
-      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, "my-auth-data", "my-clear-text")
-      {:ok,
-       {<<11, 186, 216, 183, 181, 243, 68, 244, 207, 146, 117, 130, 3, 59, 190, 68>>,
-        <<57, 186, 115, 169, 171, 156, 120, 252, 200, 124, 218, 194, 216>>,
-        <<148, 154, 168, 69, 139, 255, 61, 31, 203, 159, 224, 13, 50, 92, 152, 32>>}}
-
-      iex> ExCrypto.decrypt(aes_256_key, "my-auth-data", iv, cipher_text, cipher_tag)
-      {:ok, "my-clear-text"}
-
+      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {init_vec, cipher_text, cipher_tag} = payload
+      iex> {:ok, val} = ExCrypto.decrypt(aes_256_key, auth_data, init_vec, cipher_text, cipher_tag)
+      iex> assert(val == clear_text)
+      true
   """
   @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag) do

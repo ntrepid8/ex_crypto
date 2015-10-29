@@ -1,5 +1,6 @@
 defmodule ExCryptoTest do
   use ExUnit.Case
+  doctest ExCrypto
 
   test "the truth" do
     assert 1 + 1 == 2
@@ -71,7 +72,8 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {ad, c_iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, a_data, iv, clear_text)
+    {:ok, {ad, payload}} = ExCrypto.encrypt(aes_128_key, a_data, iv, clear_text)
+    {c_iv, cipher_text, cipher_tag} = payload
     assert(clear_text != cipher_text)
 
     # decrypt
@@ -86,7 +88,8 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {ad, iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, a_data, clear_text)
+    {:ok, {ad, payload}} = ExCrypto.encrypt(aes_128_key, a_data, clear_text)
+    {iv, cipher_text, cipher_tag} = payload
     assert(byte_size(iv) == 16)
     assert(byte_size(cipher_tag) == 16)
     assert(clear_text != cipher_text)
@@ -103,7 +106,8 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {ad, iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
+    {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
+    {iv, cipher_text, cipher_tag} = payload
     assert(byte_size(iv) == 16)
     assert(byte_size(cipher_tag) == 16)
     assert(clear_text != cipher_text)
@@ -120,19 +124,17 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {ad, iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
-    IO.inspect {ad, iv, cipher_text, cipher_tag}
+    {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
+    {iv, cipher_text, cipher_tag} = payload
     assert(byte_size(iv) == 16)
     assert(byte_size(cipher_tag) == 16)
     assert(clear_text != cipher_text)
 
     # encode payload
     {:ok, payload} = ExCrypto.encode_payload(iv, cipher_text, cipher_tag)
-    IO.puts "payload: #{payload}"
 
     # decode_payload
     {:ok, {piv, pc_text, pc_tag}} = ExCrypto.decode_payload(payload)
-    IO.inspect {piv, pc_text, pc_tag}
     assert(iv == piv)
     assert(cipher_text == pc_text)
     assert(cipher_tag == pc_tag)
