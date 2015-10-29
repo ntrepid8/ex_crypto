@@ -77,6 +77,15 @@ defmodule ExCrypto do
 
   @doc """
   Returns a string of random where the length is equal to `integer`.
+
+  ## Examples
+
+      iex> ExCrypto.rand_int(2, 20)
+      18
+      iex> ExCrypto.rand_int(2, 20)
+      4
+      iex> ExCrypto.rand_int(2, 20)
+      6
   """
   @spec rand_bytes(integer) :: {:ok, binary} | {:error, binary}
   def rand_bytes(length) do
