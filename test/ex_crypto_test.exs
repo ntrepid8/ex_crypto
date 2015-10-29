@@ -71,11 +71,45 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, iv, a_data, clear_text)
+    {:ok, {c_iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, iv, a_data, clear_text)
     assert(clear_text != cipher_text)
 
     # decrypt
     {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_128_key, iv, a_data, cipher_text, cipher_tag)
+    assert(decrypted_clear_text == clear_text)
+  end
+
+  test "test aes_gcm encrypt with auto-IV (128 bit key)" do
+    {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_128, :bytes)
+
+    clear_text = "a very secret message"
+    a_data = "the auth and associated data"
+
+    # encrypt
+    {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, a_data, clear_text)
+    assert(byte_size(iv) == 16)
+    assert(byte_size(cipher_tag) == 16)
+    assert(clear_text != cipher_text)
+
+    # decrypt
+    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_128_key, iv, a_data, cipher_text, cipher_tag)
+    assert(decrypted_clear_text == clear_text)
+  end
+
+  test "test aes_gcm encrypt with auto-IV (256 bit key)" do
+    {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+
+    clear_text = "a very secret message"
+    a_data = "the auth and associated data"
+
+    # encrypt
+    {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
+    assert(byte_size(iv) == 16)
+    assert(byte_size(cipher_tag) == 16)
+    assert(clear_text != cipher_text)
+
+    # decrypt
+    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_256_key, iv, a_data, cipher_text, cipher_tag)
     assert(decrypted_clear_text == clear_text)
   end
 

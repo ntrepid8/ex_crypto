@@ -153,17 +153,89 @@ defmodule ExCrypto do
   end
 
   @doc """
-  Returns a cipher-text string encrypted with AES in GCM mode.
+  Encrypt a `binary` with AES in GCM mode.
+
+  Returns a tuple containing the `initialization_vector`, the `cipher_text` and the `cipher_tag`.
+
+  At a high level encryption using AES in GCM mode looks like this:
+
+      key + init_vec + auth_data + clear_text -> cipher_text + cipher_tag
+
+  ## Examples
+
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      {:ok,
+       <<102, 61, 103, 218, 73, 12, 233, 190, 254, 123, 108, 9, 230, 183, 7, 46, 233, 75, 1, 147, 143, 167, 78, 232, 126, 187, 153, 239, 128, 133, 76, 25>>}
+      
+      iex> {:ok, iv} = ExCrypto.rand_bytes(16)
+      {:ok,
+       <<137, 18, 92, 222, 46, 164, 131, 171, 232, 216, 144, 51, 227, 240, 186, 116>>}
+      
+      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, iv, "my-auth-data", "my-clear-text")
+      {:ok,
+       {<<137, 18, 92, 222, 46, 164, 131, 171, 232, 216, 144, 51, 227, 240, 186, 116>>,
+        <<242, 162, 159, 156, 28, 117, 128, 247, 48, 128, 25, 47, 151>>,
+        <<160, 113, 232, 103, 162, 0, 75, 69, 31, 50, 186, 213, 72, 239, 229, 208>>}}
+
+
   """
-  @spec encrypt(binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
+  @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, binary, binary}} | {:error, binary}
   def encrypt(key, initialization_vector, authentication_data, clear_text) do
-    {:ok, :crypto.block_encrypt(:aes_gcm, key, initialization_vector, {authentication_data, clear_text})}
+    case :crypto.block_encrypt(:aes_gcm, key, initialization_vector, {authentication_data, clear_text}) do
+      {cipher_text, cipher_tag} -> {:ok, {initialization_vector, cipher_text, cipher_tag}}
+      x -> {:error, x}
+    end
   catch
     kind, error -> normalize_error(kind, error)
   end
 
   @doc """
+  Encrypt a `binary` with AES in GCM mode.
+
+  A 128 bit `initialization_vector` is generated automatically by `encrypt/3`. It returns a tuple 
+  containing the `initialization_vector`, the `cipher_text` and the `cipher_tag`.
+
+  ## Examples
+
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      {:ok,
+       <<94, 197, 140, 75, 88, 191, 233, 230, 189, 96, 86, 107, 179, 243, 111, 10, 201, 22, 84, 219, 90, 70, 107, 225, 13, 196, 147, 56, 34, 33, 22, 107>>}
+      
+      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, "my-auth-data", "my-clear-text")
+      {:ok,
+       {<<11, 186, 216, 183, 181, 243, 68, 244, 207, 146, 117, 130, 3, 59, 190, 68>>,
+        <<57, 186, 115, 169, 171, 156, 120, 252, 200, 124, 218, 194, 216>>,
+        <<148, 154, 168, 69, 139, 255, 61, 31, 203, 159, 224, 13, 50, 92, 152, 32>>}}
+
+  """
+  @spec encrypt(binary, binary, binary) :: {:ok, {binary, binary, binary}} | {:error, binary}
+  def encrypt(key, authentication_data, clear_text) do
+    {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
+    encrypt(key, initialization_vector, authentication_data, clear_text)
+  end
+
+  @doc """
   Returns a clear-text string decrypted with AES in GCM mode.
+
+  At a high level decryption using AES in GCM mode looks like this:
+
+      key + init_vec + auth_data + cipher_text + cipher_tag -> clear_text
+
+  ## Examples
+
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      {:ok,
+       <<94, 197, 140, 75, 88, 191, 233, 230, 189, 96, 86, 107, 179, 243, 111, 10, 201, 22, 84, 219, 90, 70, 107, 225, 13, 196, 147, 56, 34, 33, 22, 107>>}
+      
+      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, "my-auth-data", "my-clear-text")
+      {:ok,
+       {<<11, 186, 216, 183, 181, 243, 68, 244, 207, 146, 117, 130, 3, 59, 190, 68>>,
+        <<57, 186, 115, 169, 171, 156, 120, 252, 200, 124, 218, 194, 216>>,
+        <<148, 154, 168, 69, 139, 255, 61, 31, 203, 159, 224, 13, 50, 92, 152, 32>>}}
+
+      iex> ExCrypto.decrypt(aes_256_key, iv, "my-auth-data", cipher_text, cipher_tag)
+      {:ok, "my-clear-text"}
+
   """
   @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def decrypt(key, initialization_vector, authentication_data, cipher_text, cipher_tag) do
