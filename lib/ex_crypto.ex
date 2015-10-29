@@ -43,8 +43,12 @@ defmodule ExCrypto do
 
   ## Examples
 
-      iex> ExCrypto.rand_chars(10)
-      "vIS7PHrDD_"
+      iex> ExCrypto.rand_chars(24)
+      "njZ7bbu6UmLbEtw5JpaKGd4s"
+      iex> ExCrypto.rand_chars(32)
+      "Mk7I3SMCz2kKMUFYZcch7X-yFl2AjUGa"
+      iex> ExCrypto.rand_chars(44)
+      "9KS1uHmFBfZB4wFdPmnapw4mi7lpuVuixSuezcIn-YOe"
   """
   @spec rand_chars(integer) :: String.t
   def rand_chars(num_chars) do
@@ -67,8 +71,12 @@ defmodule ExCrypto do
 
   ## Examples
 
-      iex> ExCrypto.rand_int(5, 15)
-      13
+      iex> ExCrypto.rand_int(2, 20)
+      18
+      iex> ExCrypto.rand_int(2, 20)
+      4
+      iex> ExCrypto.rand_int(2, 20)
+      6
   """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
@@ -80,12 +88,15 @@ defmodule ExCrypto do
 
   ## Examples
 
-      iex> ExCrypto.rand_int(2, 20)
-      18
-      iex> ExCrypto.rand_int(2, 20)
-      4
-      iex> ExCrypto.rand_int(2, 20)
-      6
+      iex> ExCrypto.rand_bytes(16)
+      {:ok,
+       <<57, 120, 189, 13, 191, 164, 215, 31, 182, 64, 145, 125, 64, 149, 223, 243>>}
+      iex> ExCrypto.rand_bytes(24)
+      {:ok,
+       <<190, 157, 28, 47, 167, 217, 199, 159, 188, 20, 29, 8, 209, 146, 104, 200, 210, 100, 115, 143, 157, 20, 196, 69>>}
+      iex> ExCrypto.rand_bytes(32)
+      {:ok,
+       <<64, 200, 58, 1, 149, 140, 63, 2, 50, 188, 216, 210, 42, 25, 163, 194, 31, 92, 234, 182, 242, 201, 113, 12, 240, 105, 231, 47, 113, 31, 217, 199>>}
   """
   @spec rand_bytes(integer) :: {:ok, binary} | {:error, binary}
   def rand_bytes(length) do
