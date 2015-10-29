@@ -1,0 +1,586 @@
+    <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ExCrypto – ExCrypto v0.0.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.10.0">
+    <link rel="stylesheet" href="dist/app.css" />
+    <script src="dist/sidebar_items.js"></script>
+  </head>
+  <body data-type="modules">
+
+    <div class="main">
+<button class="sidebar-toggle">
+  <i class="icon-menu"></i>
+</button>
+<section class="sidebar">
+  <button class="sidebar-toggle">
+    <i class="icon-menu"></i>
+  </button>
+
+  
+  <a href="extra-api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        ExCrypto
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.0.1
+      </h2>
+    </div>
+    
+  </a>
+
+  <div class="sidebar-search">
+    <i class="icon-search"></i>
+    <input type="text" class="sidebar-searchInput" placeholder="search" autocomplete="off" />
+  </div>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+      <li><a id="exceptions-list" href="#full-list">Exceptions</a></li>
+    
+
+    
+  </ul>
+
+  <ul id="full-list" class="sidebar-fullList"></ul>
+  <div class="sidebar-noResults"></div>
+</section>
+
+<section class="content">
+  <div id="content" class="content-inner">
+
+
+      <h1>
+        ExCrypto
+        
+        
+      </h1>
+
+      
+        <section id="moduledoc" class="docstring">
+          <p>The ExCrypto module exposes a subset of functionality from the Erlang <code class="inline">crypto</code> 
+module with the goal of making it easier to include strong cryptography in your
+Elixir applications.</p>
+<p>This module provides functions for symmetric-key cryptographic operations using 
+AES in GCM mode. The ExCrypto module attempts to reduce complexity by providing 
+some sane default values for common operations.</p>
+
+        </section>
+      
+
+      
+        <section id="summary" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#summary">
+              <i class="icon-link"></i>
+            </a>
+            Summary
+          </h1>
+          
+
+          
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+    <div class="summary-row">
+  <div class="summary-signature">
+    <a href="#decode_payload/1">decode_payload(encoded_parts)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Split and decode the three parts of an encrypted payload and encode using <code class="inline">Base.url_decode64</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#decrypt/5">decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Returns a clear-text string decrypted with AES in GCM mode</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#encode_payload/3">encode_payload(initialization_vector, cipher_text, cipher_tag)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Join the three parts of an encrypted payload and encode using <code class="inline">Base.url_encode64</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#encrypt/3">encrypt(key, authentication_data, clear_text)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Same as <a href="#encrypt/4"><code class="inline">encrypt/4</code></a> except the <code class="inline">initialization_vector</code> is automatically</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#encrypt/4">encrypt(key, authentication_data, initialization_vector, clear_text)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Encrypt a <code class="inline">binary</code> with AES in GCM mode</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#generate_aes_key/2">generate_aes_key(key_type, key_format)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Returns an AES key</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#rand_bytes/1">rand_bytes(length)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Returns a string of random where the length is equal to <code class="inline">integer</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#rand_chars/1">rand_chars(num_chars)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Returns random characters. Each character represents 6 bits of entropy</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#rand_int/2">rand_int(low, high)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Returns a random integer between <code class="inline">low</code> and <code class="inline">high</code></p>
+</div>
+  
+</div>
+
+  </div>
+
+
+          
+
+          
+
+        </section>
+      
+
+      
+
+      
+        <section id="functions" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#functions">
+              <i class="icon-link"></i>
+            </a>
+            Functions
+          </h1>
+          <div class="detail" id="decode_payload/1">
+  <div class="detail-header">
+    <a href="#decode_payload/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">decode_payload(encoded_parts)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">decode_payload(binary) ::
+  {:ok, {binary, binary, binary}} |
+  {:error, binary}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Split and decode the three parts of an encrypted payload and encode using <code class="inline">Base.url_decode64</code>.</p>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; clear_text = &quot;my-clear-text&quot;
+iex&gt; auth_data = &quot;my-auth-data&quot;
+iex&gt; {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+iex&gt; {:ok, {ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+iex&gt; {:ok, encoded_payload} = ExCrypto.encode_payload(init_vec, cipher_text, cipher_tag)
+iex&gt; assert(String.valid?(encoded_payload))
+true
+iex&gt; {:ok, {d_init_vec, d_cipher_text, d_cipher_tag}} = ExCrypto.decode_payload(encoded_payload)
+iex&gt; assert(d_init_vec == init_vec)
+true
+iex&gt; assert(d_cipher_text == cipher_text)
+true
+iex&gt; assert(d_cipher_tag == cipher_tag)
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="decrypt/5">
+  <div class="detail-header">
+    <a href="#decrypt/5" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">decrypt(binary, binary, binary, binary, binary) ::
+  {:ok, binary} |
+  {:error, binary}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Returns a clear-text string decrypted with AES in GCM mode.</p>
+<p>At a high level decryption using AES in GCM mode looks like this:</p>
+<pre><code class="elixir">key + init_vec + auth_data + cipher_text + cipher_tag -&gt; clear_text</code></pre>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; clear_text = &quot;my-clear-text&quot;
+iex&gt; auth_data = &quot;my-auth-data&quot;
+iex&gt; {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+iex&gt; {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+iex&gt; {init_vec, cipher_text, cipher_tag} = payload
+iex&gt; {:ok, val} = ExCrypto.decrypt(aes_256_key, auth_data, init_vec, cipher_text, cipher_tag)
+iex&gt; assert(val == clear_text)
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="encode_payload/3">
+  <div class="detail-header">
+    <a href="#encode_payload/3" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">encode_payload(initialization_vector, cipher_text, cipher_tag)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">encode_payload(binary, binary, binary) ::
+  {:ok, binary} |
+  {:error, binary}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Join the three parts of an encrypted payload and encode using <code class="inline">Base.url_encode64</code>.</p>
+<p>This produces a Unicode <code class="inline">payload</code> string like this:</p>
+<pre><code class="elixir">init_vec   &lt;&gt; cipher_text &lt;&gt; cipher_tag
+[128 bits] &lt;&gt;  [?? bits]  &lt;&gt; [128 bits]</code></pre>
+<p>This format is convenient to include in HTTP request bodies.  It can also be used with JSON transport formats.</p>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; clear_text = &quot;my-clear-text&quot;
+iex&gt; auth_data = &quot;my-auth-data&quot;
+iex&gt; {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+iex&gt; {:ok, {ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+iex&gt; {:ok, encoded_payload} = ExCrypto.encode_payload(init_vec, cipher_text, cipher_tag)
+iex&gt; assert(String.valid?(encoded_payload))
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="encrypt/3">
+  <div class="detail-header">
+    <a href="#encrypt/3" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">encrypt(key, authentication_data, clear_text)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">encrypt(binary, binary, binary) ::
+  {:ok, {binary, {binary, binary, binary}}} |
+  {:error, binary}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Same as <a href="#encrypt/4"><code class="inline">encrypt/4</code></a> except the <code class="inline">initialization_vector</code> is automatically.</p>
+<p>A 128 bit <code class="inline">initialization_vector</code> is generated automatically by <a href="#encrypt/3"><code class="inline">encrypt/3</code></a>. It returns a tuple 
+containing the <code class="inline">initialization_vector</code>, the <code class="inline">cipher_text</code> and the <code class="inline">cipher_tag</code>.</p>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; clear_text = &quot;my-clear-text&quot;
+iex&gt; auth_data = &quot;my-auth-data&quot;
+iex&gt; {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+iex&gt; {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+iex&gt; {init_vec, cipher_text, cipher_tag} = payload
+iex&gt; assert(is_bitstring(cipher_text))
+true
+iex&gt; assert(bit_size(cipher_tag) == 128)
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="encrypt/4">
+  <div class="detail-header">
+    <a href="#encrypt/4" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">encrypt(key, authentication_data, initialization_vector, clear_text)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">encrypt(binary, binary, binary, binary) ::
+  {:ok, {binary, {binary, binary, binary}}} |
+  {:error, binary}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Encrypt a <code class="inline">binary</code> with AES in GCM mode.</p>
+<p>Returns a tuple containing the <code class="inline">initialization_vector</code>, the <code class="inline">cipher_text</code> and the <code class="inline">cipher_tag</code>.</p>
+<p>At a high level encryption using AES in GCM mode looks like this:</p>
+<pre><code class="elixir">key + init_vec + auth_data + clear_text -&gt; cipher_text + cipher_tag</code></pre>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; clear_text = &quot;my-clear-text&quot;
+iex&gt; auth_data = &quot;my-auth-data&quot;
+iex&gt; {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+iex&gt; {:ok, iv} = ExCrypto.rand_bytes(16)
+iex&gt; {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, iv, clear_text)
+iex&gt; {iv, cipher_text, cipher_tag} = payload
+iex&gt; assert(is_bitstring(cipher_text))
+true
+iex&gt; assert(bit_size(cipher_tag) == 128)
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="generate_aes_key/2">
+  <div class="detail-header">
+    <a href="#generate_aes_key/2" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">generate_aes_key(key_type, key_format)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">generate_aes_key(atom, atom) ::
+  {:ok, binary} |
+  {:error, binary}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Returns an AES key.</p>
+<p>Accepts a <code class="inline">key_type</code> (<code class="inline">:aes_128</code>|<code class="inline">:aes_192</code>|<code class="inline">:aes_256</code>) and <code class="inline">key_format</code> 
+(<code class="inline">:base64</code>|<code class="inline">:bytes</code>) to determine type of key to produce.</p>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; {:ok, key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+iex&gt; assert bit_size(key) == 256
+true
+
+iex&gt; {:ok, key} = ExCrypto.generate_aes_key(:aes_256, :base64)
+iex&gt; assert String.length(key) == 44
+true
+
+iex&gt; {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :bytes)
+iex&gt; assert bit_size(key) == 192
+true
+
+iex&gt; {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :base64)
+iex&gt; assert String.length(key) == 32
+true
+
+iex&gt; {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :bytes)
+iex&gt; assert bit_size(key) == 128
+true
+
+iex&gt; {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :base64)
+iex&gt; assert String.length(key) == 24
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="rand_bytes/1">
+  <div class="detail-header">
+    <a href="#rand_bytes/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">rand_bytes(length)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">rand_bytes(integer) ::
+  {:ok, binary} |
+  {:error, binary}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Returns a string of random where the length is equal to <code class="inline">integer</code>.</p>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; {:ok, rand_bytes} = ExCrypto.rand_bytes(16)
+iex&gt; assert(byte_size(rand_bytes) == 16)
+true
+iex&gt; assert(bit_size(rand_bytes) == 128)
+true
+
+iex&gt; {:ok, rand_bytes} = ExCrypto.rand_bytes(24)
+iex&gt; assert(byte_size(rand_bytes) == 24)
+true
+iex&gt; assert(bit_size(rand_bytes) == 192)
+true
+
+iex&gt; {:ok, rand_bytes} = ExCrypto.rand_bytes(32)
+iex&gt; assert(byte_size(rand_bytes) == 32)
+true
+iex&gt; assert(bit_size(rand_bytes) == 256)
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="rand_chars/1">
+  <div class="detail-header">
+    <a href="#rand_chars/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">rand_chars(num_chars)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">rand_chars(integer) :: <a href="http://elixir-lang.org/docs/stable/elixir/String.html#t:t/0">String.t</a></code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Returns random characters. Each character represents 6 bits of entropy.</p>
+<p>Accepts an <code class="inline">integer</code> to determine the number of random characters to return.</p>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; rand_string = ExCrypto.rand_chars(24)
+iex&gt; assert(String.length(rand_string) == 24)
+true
+
+iex&gt; rand_string = ExCrypto.rand_chars(32)
+iex&gt; assert(String.length(rand_string) == 32)
+true
+
+iex&gt; rand_string = ExCrypto.rand_chars(44)
+iex&gt; assert(String.length(rand_string) == 44)
+true</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="rand_int/2">
+  <div class="detail-header">
+    <a href="#rand_int/2" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">rand_int(low, high)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">rand_int(integer, integer) :: integer</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Returns a random integer between <code class="inline">low</code> and <code class="inline">high</code>.</p>
+<p>Accepts two <code class="inline">integer</code> arguments for the <code class="inline">low</code> and <code class="inline">high</code> boundaries. The <code class="inline">low</code> argument 
+must be less than the <code class="inline">high</code> argument.</p>
+<h2>Examples</h2>
+<pre><code class="iex elixir">iex&gt; rand_int = ExCrypto.rand_int(2, 20)
+iex&gt; assert(rand_int &gt; 1)
+true
+iex&gt; assert(rand_int &lt; 20)
+true
+
+iex&gt; rand_int = ExCrypto.rand_int(23, 99)
+iex&gt; assert(rand_int &gt; 23)
+true
+iex&gt; assert(rand_int &lt; 99)
+true
+
+iex&gt; rand_int = ExCrypto.rand_int(212, 736)
+iex&gt; assert(rand_int &gt; 212)
+true
+iex&gt; assert(rand_int &lt; 736)
+true</code></pre>
+
+  </section>
+</div>
+
+        </section>
+      
+
+      
+
+      
+        <footer class="footer">
+      <p>
+        <span class="line">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.10.0),
+        </span>
+        <span class="line">
+          designed by
+          <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+          </span>
+      </p>
+    </footer>
+  </div>
+</section>
+</div>
+    <script src="dist/app.js"></script>
+  </body>
+</html>
+

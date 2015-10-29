@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>README – ExCrypto v0.0.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.10.0">
+    <link rel="stylesheet" href="dist/app.css" />
+    <script src="dist/sidebar_items.js"></script>
+  </head>
+  <body data-type="extras">
+
+<div class="main">
+<button class="sidebar-toggle">
+  <i class="icon-menu"></i>
+</button>
+<section class="sidebar">
+  <button class="sidebar-toggle">
+    <i class="icon-menu"></i>
+  </button>
+
+  
+  <a href="extra-api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        ExCrypto
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.0.1
+      </h2>
+    </div>
+    
+  </a>
+
+  <div class="sidebar-search">
+    <i class="icon-search"></i>
+    <input type="text" class="sidebar-searchInput" placeholder="search" autocomplete="off" />
+  </div>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+      <li><a id="exceptions-list" href="#full-list">Exceptions</a></li>
+    
+
+    
+  </ul>
+
+  <ul id="full-list" class="sidebar-fullList"></ul>
+  <div class="sidebar-noResults"></div>
+</section>
+
+<section class="content">
+  <div id="content" class="content-inner">
+
+
+<h1>ExCrypto</h1>
+<p>The goal of <a href="ExCrypto.html"><code class="inline">ExCrypto</code></a> and <a href="ExPublicKey.html"><code class="inline">ExPublicKey</code></a> is to expose a subset of the functionality from the Erlang modules <code class="inline">crypto</code> and <code class="inline">public_key</code> so that writing secure Elixir applications is a little bit easier without being overwhelming. In many functions some sane defaults are provided to decrease the complexity of implementing those functions in your own code.</p>
+<h2 id="Using-ExPublicKey"> Using ExPublicKey</h2><p>The <a href="ExPublicKey.html"><code class="inline">ExPublicKey</code></a> module provides functions for working with RSA public/private key operations. There are a couple common uses for public-key cryptography:</p>
+<ul>
+<li><a href="#authenticate-a-message">Authenticate a message</a>
+</li>
+<li><a href="#transmit-a-shared-secret">Transmit a shared secret</a> (session key)
+</li>
+</ul>
+<h3>Authenticate a message</h3>
+<p>The goal of <code class="inline">ExPublicKey.sign</code> and <code class="inline">ExPublicKey.verify</code> is that the recipient of a message can identify the sender. This can be accomplished as follows:</p>
+<p><em>Note: assume the message is a JSON payload.</em></p>
+<ul>
+<li>Sender
+</li>
+<li>serialize the JSON to a string
+</li>
+<li>hash, time-stamp, and sign with your private-key
+</li>
+<li>Receiver
+</li>
+<li>ensure the time-stamp is within the current window
+</li>
+<li>verify the signature with the sender’s public-key
+</li>
+</ul>
+<p>Here are the steps in order:</p>
+<pre><code class="elixir"># load the RSA keys from a file on disk
+rsa_priv_key = ExPublicKey.load!(&quot;/path/to/private_key.pem&quot;)
+rsa_pub_key = ExPublicKey.load!(&quot;/path/to/public_key.pem&quot;)
+
+# create the message JSON
+msg = %{&quot;name_first&quot;=&gt;&quot;Chuck&quot;,&quot;name_last&quot;=&gt;&quot;Norris&quot;}
+
+# serialize the JSON
+msg_serialized = Poison.encode!(msg)
+
+# generate time-stamp
+ts = Date.now |&gt; Date.to_secs
+
+# add a time-stamp
+ts_msg_serialized = &quot;#{ts}|#{msg_serialized}&quot;
+
+# generate a secure hash using SHA256 and sign the message with the private key
+{:ok, signature} = ExPublicKey.sign(ts_msg_serialized, rsa_priv_key)
+
+# combine payload
+payload = &quot;#{ts}|#{msg_serialized}|#{Base.url_encode64 signature}&quot;
+IO.puts payload
+
+# pretend transmit the message...
+# pretend receive the message...
+
+# break up the payload
+parts = String.split(payload, &quot;|&quot;)
+recv_ts = Enum.fetch!(parts, 0)
+recv_msg_serialized = Enum.fetch!(parts, 1)
+{:ok, recv_sig} = Enum.fetch!(parts, 2) |&gt; Base.url_decode64
+
+# pretend ensure the time-stamp is not too old (or from the future)...
+# it should probably no more than 5 minutes old, and no more than 15 minutes in the future
+
+# verify the signature
+{:ok, sig_valid} = ExPublicKey.verify(&quot;#{recv_ts}|#{recv_msg_serialized}&quot;, recv_sig, rsa_pub_key)
+assert(sig_valid)
+
+# un-serialize the JSON
+recv_msg_unserialized = Poison.Parser.parse!(recv_msg_serialized)
+assert(msg == recv_msg_unserialized)</code></pre>
+<p><em>Note: this example is similar to the test “sign and verify a JSON payload” in <code class="inline">test/ex_public_key_test.exs</code>.</em></p>
+<h3>Transmit a shared secret</h3>
+<p><em>(in progress)</em></p>
+<h3>Load the keys from PEM format files</h3>
+<p>First load the public/private RSA keys from disk:</p>
+<pre><code class="elixir">iex(1)&gt; {:ok, rsa_private_key} = ExPublicKey.load(&quot;/tmp/test_rsa_private_key.pem&quot;)
+{:ok, %ExPublicKey.RSAPrivateKey{...}}
+
+iex(2)&gt; {:ok, rsa_public_key} = ExPublicKey.load(&quot;/tmp/test_rsa_public_key.pem&quot;)
+{:ok, %ExPublicKey.RSAPublicKey{...}}</code></pre>
+<h3>Sign with RSA private key</h3>
+<p>To create a signature with the <code class="inline">RSAPrivateKey</code> like this:</p>
+<pre><code class="elixir">iex(3)&gt; message = &quot;A very important message.&quot;
+&quot;A very important message.&quot;
+
+ex(4)&gt; {:ok, signature} = ExPublicKey.sign(message, rsa_private_key)
+{:ok, &lt;&lt;...&gt;&gt;}</code></pre>
+<h3>Verify signature with RSA public key</h3>
+<pre><code class="elixir">iex(5)&gt; {:ok, valid} = ExPublicKey.verify(message, signature, rsa_public_key)
+{:ok, true}</code></pre>
+<h3>Encrypt with RSA public key</h3>
+<pre><code class="elixir">iex(6)&gt; clear_text = &quot;A super important message&quot;
+&quot;A super important message&quot;
+iex(7)&gt; {:ok, cipher_text} = ExPublicKey.encrypt_public(clear_text, rsa_public_key)
+{:ok, &quot;Lmbv...HQ==&quot;}</code></pre>
+<h3>Decrypt with RSA private key</h3>
+<pre><code class="elixir">iex(8)&gt; {:ok, decrypted_clear_text} = ExPublicKey.decrypt_private(cipher_text, rsa_private_key)
+{:ok, &quot;A super important message&quot;}</code></pre>
+<h2 id="Using-ExCrypto"> Using ExCrypto</h2><p>The <a href="ExCrypto.html"><code class="inline">ExCrypto</code></a> module provides relatively functions for AES cryptography operations.</p>
+<h3>Generate AES keys</h3>
+<p>Generate a new 128 bit AES key like this:</p>
+<pre><code class="elixir">iex(1)&gt; {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_128, :bytes)
+{:ok, &lt;&lt;...&gt;&gt;}</code></pre>
+<p>Often it’s more convenient to handle the key as a base64 encoded string and you can generate a new key, already encoded as a base64 unicode string like this:</p>
+<pre><code class="elixir">iex(2)&gt; {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_128, :base64)
+{:ok,
+ &quot;deGqaW9gP1_0WlSomf2pZDzeyGcitSmfXYu7ygTsypsrSmvTVfl7ANQsTWc30TP9IftiBnmDlqkuU1ARzAN82Fo1NMJhvVi3iWkzYe9yusm0s3ymUh4Hs2O7oZCgJeavFwuHgrpk_79nyfe3HkSNoAVjNWv0ImOmLyClrPIa3qk=&quot;}</code></pre>
+<p> You can also generate 192/256 bit AES keys like this:</p>
+<pre><code class="elixir">iex(3)&gt; {:ok, aes_192_key} = ExCrypto.generate_aes_key(:aes_192, :base64)
+{:ok,
+ &quot;P173Su55_bFR4WEf4SmKC4yKAX-IT9-83rbS6RSIPxEHf7uTEvyr969C3ZCkbSh5dJrWd35zjYQM-l5DpGzdIztxCqvN9myGYUdrfn9D2PRh9Y7XgQWRqYJ6FE67EHcNgJWrxEQ_HRt5jBczoY-34AZAN3RVcVqXrwGZw6ISJcyKVc30nJOBS9N4QeQWw2bPrppfzA43-_hAVfjEKCUyPzi2zlG2WUsaeKS4vOOmVAzkC0IPbONqVtzlxiFwbr7I&quot;}
+
+iex(4)&gt; {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :base64)
+{:ok,
+ &quot;Bs_BzhuwseEA8ZUvuEY0mq9Rmlv6cSoU_RaYD14Q62HiN_kJ4FiaW0YYppf1ffYPQ56xuitxQtYAnaeP-Q5l1WPh5aExdwCG_PUm5g-MlOUA1XSSP2RvuQqAiHzazIzjGVSIcl0Gr7TSLPOoIQrPshMNaA4j3SGZ3lAOqO1quvXtDn-9Sxwr5dwV7VzOIvXRwb0GbZeYp8lnVJgeqHl8cEhUTfT_h9Pm7tU2CFeHZCDK8ntFT_t4q6VlcBcvw_Pj3CGcVSmpmCHMKW1brt6jXGBijqSTdbjYDZnCx2Q44VoYqMMZ1U2GnVyjc-ZuwugwGGqQ7UEqV_TOMjbK6Oxx-Q==&quot;}</code></pre>
+<p> In both examples the <code class="inline">:bytes</code> atom can be substituted for <code class="inline">:base64</code> if you wish to receive your key as a <code class="inline">bitstring</code> rather than as a base64 encoded unicode string.</p>
+<p> As you can see the keys grow longer in order of bit length.  A 128 bit key is more than sufficient for most applications but if you are slightly more paranoid than average use a 192 bit key.</p>
+<p> If your paranoia knows no bounds or you are protecting state secrets from nation-state owned quantum computers use a 256 bit key.</p>
+<p> If you are concerned about hyper-advanced aliens with quantum computers you might need a longer key. Enterprise grade keys such as this can be generated upon request in the context of a consulting agreement.  For this application we recommend at least a 612 bit key.</p>
+
+    <footer class="footer">
+      <p>
+        <span class="line">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.10.0),
+        </span>
+        <span class="line">
+          designed by
+          <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+          </span>
+      </p>
+    </footer>
+  </div>
+</section>
+</div>
+    <script src="dist/app.js"></script>
+  </body>
+</html>
+
