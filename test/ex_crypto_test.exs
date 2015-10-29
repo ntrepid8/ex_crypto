@@ -64,18 +64,18 @@ defmodule ExCryptoTest do
     assert(String.length(aes_256_key) == 44)
   end
 
-  test "test aes_gcm encrypt with 128 bit key" do
+  test "aes_gcm encrypt with 128 bit key" do
     {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_128, :bytes)
     {:ok, iv} = ExCrypto.rand_bytes(16)
     clear_text = "a very secret message"
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {c_iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, iv, a_data, clear_text)
+    {:ok, {ad, c_iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, a_data, iv, clear_text)
     assert(clear_text != cipher_text)
 
     # decrypt
-    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_128_key, iv, a_data, cipher_text, cipher_tag)
+    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_128_key, ad, iv, cipher_text, cipher_tag)
     assert(decrypted_clear_text == clear_text)
   end
 
@@ -86,13 +86,13 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, a_data, clear_text)
+    {:ok, {ad, iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_128_key, a_data, clear_text)
     assert(byte_size(iv) == 16)
     assert(byte_size(cipher_tag) == 16)
     assert(clear_text != cipher_text)
 
     # decrypt
-    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_128_key, iv, a_data, cipher_text, cipher_tag)
+    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_128_key, ad, iv, cipher_text, cipher_tag)
     assert(decrypted_clear_text == clear_text)
   end
 
@@ -103,14 +103,40 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
+    {:ok, {ad, iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
     assert(byte_size(iv) == 16)
     assert(byte_size(cipher_tag) == 16)
     assert(clear_text != cipher_text)
 
     # decrypt
-    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_256_key, iv, a_data, cipher_text, cipher_tag)
+    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_256_key, ad, iv, cipher_text, cipher_tag)
     assert(decrypted_clear_text == clear_text)
   end
+
+  test "package AES GCM payload" do
+    {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+
+    clear_text = "a very secret message"
+    a_data = "the auth and associated data"
+
+    # encrypt
+    {:ok, {ad, iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
+    IO.inspect {ad, iv, cipher_text, cipher_tag}
+    assert(byte_size(iv) == 16)
+    assert(byte_size(cipher_tag) == 16)
+    assert(clear_text != cipher_text)
+
+    # encode payload
+    {:ok, payload} = ExCrypto.encode_payload(iv, cipher_text, cipher_tag)
+    IO.puts "payload: #{payload}"
+
+    # decode_payload
+    {:ok, {piv, pc_text, pc_tag}} = ExCrypto.decode_payload(payload)
+    IO.inspect {piv, pc_text, pc_tag}
+    assert(iv == piv)
+    assert(cipher_text == pc_text)
+    assert(cipher_tag == pc_tag)
+  end
+
 
 end

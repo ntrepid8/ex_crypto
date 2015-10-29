@@ -171,18 +171,19 @@ defmodule ExCrypto do
       {:ok,
        <<137, 18, 92, 222, 46, 164, 131, 171, 232, 216, 144, 51, 227, 240, 186, 116>>}
       
-      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, iv, "my-auth-data", "my-clear-text")
+      iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, "my-auth-data", iv, "my-clear-text")
       {:ok,
-       {<<137, 18, 92, 222, 46, 164, 131, 171, 232, 216, 144, 51, 227, 240, 186, 116>>,
+       {"my-auth-data",
+        <<137, 18, 92, 222, 46, 164, 131, 171, 232, 216, 144, 51, 227, 240, 186, 116>>,
         <<242, 162, 159, 156, 28, 117, 128, 247, 48, 128, 25, 47, 151>>,
         <<160, 113, 232, 103, 162, 0, 75, 69, 31, 50, 186, 213, 72, 239, 229, 208>>}}
 
 
   """
-  @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, binary, binary}} | {:error, binary}
-  def encrypt(key, initialization_vector, authentication_data, clear_text) do
+  @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, binary, binary, binary}} | {:error, binary}
+  def encrypt(key, authentication_data, initialization_vector, clear_text) do
     case :crypto.block_encrypt(:aes_gcm, key, initialization_vector, {authentication_data, clear_text}) do
-      {cipher_text, cipher_tag} -> {:ok, {initialization_vector, cipher_text, cipher_tag}}
+      {cipher_text, cipher_tag} -> {:ok, {authentication_data, initialization_vector, cipher_text, cipher_tag}}
       x -> {:error, x}
     end
   catch
@@ -203,15 +204,16 @@ defmodule ExCrypto do
       
       iex> {:ok, {iv, cipher_text, cipher_tag}} = ExCrypto.encrypt(aes_256_key, "my-auth-data", "my-clear-text")
       {:ok,
-       {<<11, 186, 216, 183, 181, 243, 68, 244, 207, 146, 117, 130, 3, 59, 190, 68>>,
+       {"my-auth-data",
+        <<11, 186, 216, 183, 181, 243, 68, 244, 207, 146, 117, 130, 3, 59, 190, 68>>,
         <<57, 186, 115, 169, 171, 156, 120, 252, 200, 124, 218, 194, 216>>,
         <<148, 154, 168, 69, 139, 255, 61, 31, 203, 159, 224, 13, 50, 92, 152, 32>>}}
 
   """
-  @spec encrypt(binary, binary, binary) :: {:ok, {binary, binary, binary}} | {:error, binary}
+  @spec encrypt(binary, binary, binary) :: {:ok, {binary, binary, binary, binary}} | {:error, binary}
   def encrypt(key, authentication_data, clear_text) do
     {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
-    encrypt(key, initialization_vector, authentication_data, clear_text)
+    encrypt(key, authentication_data, initialization_vector, clear_text)
   end
 
   @doc """
@@ -233,15 +235,29 @@ defmodule ExCrypto do
         <<57, 186, 115, 169, 171, 156, 120, 252, 200, 124, 218, 194, 216>>,
         <<148, 154, 168, 69, 139, 255, 61, 31, 203, 159, 224, 13, 50, 92, 152, 32>>}}
 
-      iex> ExCrypto.decrypt(aes_256_key, iv, "my-auth-data", cipher_text, cipher_tag)
+      iex> ExCrypto.decrypt(aes_256_key, "my-auth-data", iv, cipher_text, cipher_tag)
       {:ok, "my-clear-text"}
 
   """
   @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
-  def decrypt(key, initialization_vector, authentication_data, cipher_text, cipher_tag) do
+  def decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag) do
     {:ok, :crypto.block_decrypt(:aes_gcm, key, initialization_vector, {authentication_data, cipher_text, cipher_tag})}
   catch
     kind, error -> normalize_error(kind, error)
+  end
+
+  def encode_payload(initialization_vector, cipher_text, cipher_tag) do
+    {:ok, encoded_parts} = url_encode64(initialization_vector <> cipher_text <> cipher_tag)
+    {:ok, encoded_parts}
+  end
+
+  def decode_payload(encoded_parts) do
+    {:ok, decoded_parts} = Base.url_decode64(encoded_parts)
+    decoded_length = byte_size(decoded_parts)
+    iv = Kernel.binary_part(decoded_parts, 0, 16)
+    cipher_text = Kernel.binary_part(decoded_parts, 16, (decoded_length-32))
+    cipher_tag = Kernel.binary_part(decoded_parts, decoded_length, -16)
+    {:ok, {iv, cipher_text, cipher_tag}}
   end
 
 end
