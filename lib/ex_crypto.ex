@@ -38,6 +38,13 @@ defmodule ExCrypto do
 
   @doc """
   Returns random characters. Each character represents 6 bits of entropy.
+
+  Accepts an `integer` to determine the number of random characters to return.
+
+  ## Examples
+
+      iex> ExCrypto.rand_chars(10)
+      "vIS7PHrDD_"
   """
   @spec rand_chars(integer) :: String.t
   def rand_chars(num_chars) do
@@ -53,7 +60,15 @@ defmodule ExCrypto do
   end
 
   @doc """
-  Returns a random integer between `high` and `low`.
+  Returns a random integer between `low` and `high`.
+
+  Accepts two `integer` arguments for the `low` and `high` boundaries. The `low` argument 
+  must be less than the `high` argument.
+
+  ## Examples
+
+      iex> ExCrypto.rand_int(5, 15)
+      13
   """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
