@@ -1,4 +1,13 @@
 defmodule ExCrypto do
+  @moduledoc """
+  The ExCrypto module exposes a subset of functionality from the Erlang `crypto` 
+  module with the goal of making it easier to include strong cryptography in your
+  Elixir applications.
+
+  This module provides functions for symmetric-key cryptographic operations using 
+  AES in GCM mode. The ExCrypto module attempts to reduce complexity by providing 
+  some sane default values for common operations.
+  """
 
   defmacro __using__(_) do
     quote do
@@ -8,13 +17,13 @@ defmodule ExCrypto do
 
   use Pipe
 
-  defmacro pipe_ok(pipes) do
+  defmacrop pipe_ok(pipes) do
     quote do
       pipe_matching(x, {:ok, x}, unquote(pipes))
     end
   end
 
-  def normalize_error(kind, error) do
+  defp normalize_error(kind, error) do
     case Exception.normalize(kind, error) do
       %{message: message} ->
         {:error, message}
@@ -23,17 +32,14 @@ defmodule ExCrypto do
     end
   end
 
-  def detail_normalize_error(kind, error) do
+  defp detail_normalize_error(kind, error) do
     {kind, Exception.normalize(kind, error), System.stacktrace}
   end
 
   @doc """
-  Returns random characters in "blocks". Each block is a string 
-  of 4 chars.  Each block represents 24 bits of entropy, base64 encoded.
-
-  Useful for generating unique strings for use in file names.
+  Returns random characters. Each character represents 6 bits of entropy.
   """
-  @spec rand_chars(Integer.t) :: String.t
+  @spec rand_chars(integer) :: String.t
   def rand_chars(num_chars) do
     block_bytes = 3
     block_chars = 4
@@ -46,19 +52,28 @@ defmodule ExCrypto do
     String.slice(rand_string, 0, num_chars)
   end
 
+  @doc """
+  Returns a random integer between `high` and `low`.
+  """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
     :crypto.rand_uniform(low, high)
   end
 
-  @spec rand_bytes(integer) :: {atom, bitstring}
+  @doc """
+  Returns a string of random where the length is equal to `integer`.
+  """
+  @spec rand_bytes(integer) :: {:ok, binary} | {:error, binary}
   def rand_bytes(length) do
     {:ok, :crypto.strong_rand_bytes(length)}
   catch
     kind, error -> ExPublicKey.normalize_error(kind, error)
   end
 
-  @spec generate_aes_key(atom, atom) :: {atom, bitstring|String.t}
+  @doc """
+  Returns an AES key.
+  """
+  @spec generate_aes_key(atom, atom) :: {:ok, binary} | {:error, binary}
   def generate_aes_key(key_type, key_format) do
     case {key_type, key_format} do
       {:aes_128, :base64} -> pipe_ok rand_bytes(16) |> url_encode64
@@ -75,12 +90,20 @@ defmodule ExCrypto do
     {:ok, Base.url_encode64(bytes_to_encode)}
   end
 
+  @doc """
+  Returns a cipher-text string encrypted with AES in GCM mode.
+  """
+  @spec encrypt(binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def encrypt(key, initialization_vector, authentication_data, clear_text) do
     {:ok, :crypto.block_encrypt(:aes_gcm, key, initialization_vector, {authentication_data, clear_text})}
   catch
     kind, error -> normalize_error(kind, error)
   end
 
+  @doc """
+  Returns a clear-text string decrypted with AES in GCM mode.
+  """
+  @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def decrypt(key, initialization_vector, authentication_data, cipher_text, cipher_tag) do
     {:ok, :crypto.block_decrypt(:aes_gcm, key, initialization_vector, {authentication_data, cipher_text, cipher_tag})}
   catch
