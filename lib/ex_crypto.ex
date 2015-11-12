@@ -79,19 +79,19 @@ defmodule ExCrypto do
       iex> rand_int = ExCrypto.rand_int(2, 20)
       iex> assert(rand_int > 1)
       true
-      iex> assert(rand_int < 20)
+      iex> assert(rand_int < 21)
       true
       
       iex> rand_int = ExCrypto.rand_int(23, 99)
-      iex> assert(rand_int > 23)
+      iex> assert(rand_int > 22)
       true
       iex> assert(rand_int < 99)
       true
       
       iex> rand_int = ExCrypto.rand_int(212, 736)
-      iex> assert(rand_int > 212)
+      iex> assert(rand_int > 211)
       true
-      iex> assert(rand_int < 736)
+      iex> assert(rand_int < 737)
       true
   """
   @spec rand_int(integer, integer) :: integer
