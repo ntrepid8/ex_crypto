@@ -4,6 +4,12 @@ defmodule ExCrypto.HMAC do
     hmac(data, key, type: :sha256)
   end
 
+  def hmac!(data, key) do
+    case hmac(data, key) do
+      {:ok, data} -> data
+      {:error, reason} -> raise reason
+  end
+
   def hmac(data, key, [type: :sha256]) do
     {:ok, :crypto.hmac(:sha256, key, data)}
   end
