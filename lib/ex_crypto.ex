@@ -129,6 +129,14 @@ defmodule ExCrypto do
     kind, error -> ExPublicKey.normalize_error(kind, error)
   end
 
+  @spec rand_bytes!(integer) :: binary
+  def rand_bytes!(length) do
+    case rand_bytes(length) do
+      {:ok, data} -> data
+      {:error, reason} -> raise reason
+    end
+  end
+
   @doc """
   Returns an AES key.
 
