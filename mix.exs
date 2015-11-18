@@ -35,7 +35,7 @@ defmodule ExCrypto.Mixfile do
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README*", "readme*", "LICENSE*", "license*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Josh Austin"],
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/ntrepid8/ex_crypto",
