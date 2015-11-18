@@ -19,7 +19,7 @@ defmodule ExCrypto.Mixfile do
 
   defp deps do
     [
-      {:pipe, github: "batate/elixir-pipes"},
+      {:pipe, ">= 0.0.2"},
       {:poison, ">= 1.0.0"},
       {:timex, ">= 0.19.0"},
       {:earmark, "~> 0.1", only: :dev},

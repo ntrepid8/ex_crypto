@@ -5,7 +5,7 @@
   "hackney": {:hex, :hackney, "1.4.4"},
   "idna": {:hex, :idna, "1.0.2"},
   "mimerl": {:hex, :mimerl, "1.0.0"},
-  "pipe": {:git, "https://github.com/batate/elixir-pipes.git", "eba4a47c689e473b425ef59f92a51dc3b3f28f85", []},
+  "pipe": {:hex, :pipe, "0.0.2"},
   "poison": {:hex, :poison, "1.5.0"},
   "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.5"},
   "timex": {:hex, :timex, "1.0.0-rc2"},
