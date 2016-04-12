@@ -3,7 +3,7 @@ defmodule ExCrypto.Mixfile do
 
   def project do
     [app: :ex_crypto,
-     version: "0.1.0",
+     version: "0.1.1",
      name: "ExCrypto",
      elixir: ">= 1.0.0",
      description: description,
@@ -14,8 +14,15 @@ defmodule ExCrypto.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :pipe, :tzdata]]
+    [applications: applications(Mix.env)]
   end
+  defp applications(:test) do
+    applications(:prod) ++ [:tzdata]
+  end
+  defp applications(_) do
+    [:logger, :pipe]
+  end
+
 
   defp deps do
     [
