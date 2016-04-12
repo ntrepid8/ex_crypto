@@ -3,7 +3,7 @@ defmodule ExCrypto.Mixfile do
 
   def project do
     [app: :ex_crypto,
-     version: "0.0.1",
+     version: "0.1.0",
      name: "ExCrypto",
      elixir: ">= 1.0.0",
      description: description,
@@ -21,7 +21,7 @@ defmodule ExCrypto.Mixfile do
     [
       {:pipe, ">= 0.0.2"},
       {:poison, ">= 1.0.0"},
-      {:timex, ">= 0.19.0"},
+      {:timex, ">= 0.19.0", only: :test},
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.10", only: :dev}
     ]
