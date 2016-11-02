@@ -74,6 +74,22 @@ defmodule ExPublicKeyTest do
     assert(decrypted_plain_text == plain_text)
   end
 
+  test "RSA public_key encrypt and RSA private_key decrypt (url_safe: false)", context do
+    {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
+    {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
+    rand_chars = ExCrypto.rand_chars(16)
+    plain_text = "This is a test message to encrypt, complete with some entropy (#{rand_chars})."
+
+    # don't use url_safe encoding
+    opts = [url_safe: false]
+
+    {:ok, cipher_text} = ExPublicKey.encrypt_public(plain_text, rsa_pub_key, opts)
+    assert(cipher_text != plain_text)
+
+    {:ok, decrypted_plain_text} = ExPublicKey.decrypt_private(cipher_text, rsa_priv_key, opts)
+    assert(decrypted_plain_text == plain_text)
+  end
+
   test "RSA private_key encrypt and RSA public_key decrypt", context do
     {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
     {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
@@ -84,6 +100,22 @@ defmodule ExPublicKeyTest do
     assert(cipher_text != plain_text)
 
     {:ok, decrypted_plain_text} = ExPublicKey.decrypt_public(cipher_text, rsa_pub_key)
+    assert(decrypted_plain_text == plain_text)
+  end
+
+  test "RSA private_key encrypt and RSA public_key decrypt  (url_safe: false)", context do
+    {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
+    {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
+    rand_chars = ExCrypto.rand_chars(16)
+    plain_text = "This is a test message to encrypt, complete with some entropy (#{rand_chars})."
+
+    # don't use url_safe encoding
+    opts = [url_safe: false]
+
+    {:ok, cipher_text} = ExPublicKey.encrypt_private(plain_text, rsa_priv_key, opts)
+    assert(cipher_text != plain_text)
+
+    {:ok, decrypted_plain_text} = ExPublicKey.decrypt_public(cipher_text, rsa_pub_key, opts)
     assert(decrypted_plain_text == plain_text)
   end
 
