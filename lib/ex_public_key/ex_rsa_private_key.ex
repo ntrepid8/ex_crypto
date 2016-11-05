@@ -1,8 +1,8 @@
 defmodule ExPublicKey.RSAPrivateKey do
 
   defstruct version: nil,
-            public_exponent: nil,
             public_modulus: nil,
+            public_exponent: nil,
             private_exponent: nil,
             prime_one: nil,
             prime_two: nil,
@@ -13,8 +13,8 @@ defmodule ExPublicKey.RSAPrivateKey do
 
   @type t :: %ExPublicKey.RSAPrivateKey{
     version: atom,
-    public_exponent: integer,
     public_modulus: integer,
+    public_exponent: integer,
     private_exponent: integer,
     prime_one: integer,
     prime_two: integer,
@@ -27,8 +27,8 @@ defmodule ExPublicKey.RSAPrivateKey do
   def from_sequence(rsa_key_seq) do
     %ExPublicKey.RSAPrivateKey{} |> struct(
       version: elem(rsa_key_seq, 1),
-      public_exponent: elem(rsa_key_seq, 2),
-      public_modulus: elem(rsa_key_seq, 3),
+      public_modulus: elem(rsa_key_seq, 2),
+      public_exponent: elem(rsa_key_seq, 3),
       private_exponent: elem(rsa_key_seq, 4),
       prime_one: elem(rsa_key_seq, 5),
       prime_two: elem(rsa_key_seq, 6),
@@ -45,8 +45,8 @@ defmodule ExPublicKey.RSAPrivateKey do
         {:ok, {
           :RSAPrivateKey,
           rsa_private_key.version,
-          rsa_private_key.public_exponent,
           rsa_private_key.public_modulus,
+          rsa_private_key.public_exponent,
           rsa_private_key.private_exponent,
           rsa_private_key.prime_one,
           rsa_private_key.prime_two,
