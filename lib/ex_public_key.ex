@@ -126,7 +126,18 @@ defmodule ExPublicKey do
     {:ok, Base.url_encode64(bytes_to_encode)}
   end
 
-  def encrypt_private(clear_text, private_key) do
+  defp encode64(bytes_to_encode) do
+    {:ok, Base.encode64(bytes_to_encode)}
+  end
+
+  def encrypt_private(clear_text, private_key, [url_safe: false]) do
+    pipe_matching x, {:ok, x},
+      ExPublicKey.RSAPrivateKey.as_sequence(private_key)
+      |> encrypt_private_0(clear_text)
+      |> encode64
+  end
+
+  def encrypt_private(clear_text, private_key, _opts \\ []) do
     pipe_matching x, {:ok, x},
       ExPublicKey.RSAPrivateKey.as_sequence(private_key)
       |> encrypt_private_0(clear_text)
@@ -140,7 +151,14 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
-  def encrypt_public(clear_text, public_key) do
+  def encrypt_public(clear_text, public_key, [url_safe: false]) do
+    pipe_matching x, {:ok, x},
+      ExPublicKey.RSAPublicKey.as_sequence(public_key)
+      |> encrypt_public_0(clear_text)
+      |> encode64
+  end
+
+  def encrypt_public(clear_text, public_key, _opts \\ []) do
     pipe_matching x, {:ok, x},
       ExPublicKey.RSAPublicKey.as_sequence(public_key)
       |> encrypt_public_0(clear_text)
@@ -161,7 +179,14 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
-  def decrypt_private(cipher_text, private_key) do
+  def decrypt_private(cipher_text, private_key, [url_safe: false]) do
+    pipe_matching x, {:ok, x},
+      Base.decode64(cipher_text)
+      |> decrypt_private_0(private_key)
+      |> decrypt_private_1
+  end
+
+  def decrypt_private(cipher_text, private_key, _opts \\ []) do
     pipe_matching x, {:ok, x},
       Base.url_decode64(cipher_text)
       |> decrypt_private_0(private_key)
@@ -182,7 +207,14 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
-  def decrypt_public(cipher_text, public_key) do
+  def decrypt_public(cipher_text, public_key, [url_safe: false]) do
+    pipe_matching x, {:ok, x},
+      Base.decode64(cipher_text)
+      |> decrypt_public_0(public_key)
+      |> decrypt_public_1
+  end
+
+  def decrypt_public(cipher_text, public_key, _opts \\ []) do
     pipe_matching x, {:ok, x},
       Base.url_decode64(cipher_text)
       |> decrypt_public_0(public_key)
