@@ -4,6 +4,10 @@ The goal of `ExCrypto` and `ExPublicKey` is to expose a subset of the functional
 
 Checkout the docs at: <https://ntrepid8.github.io/ex_crypto/>
 
+## Build Status
+
+[![Build Status](https://travis-ci.org/ntrepid8/ex_crypto.svg?branch=master)](https://travis-ci.org/ntrepid8/ex_crypto)
+
 ## Using ExPublicKey
 
 The `ExPublicKey` module provides functions for working with RSA public/private key operations. There are a couple common uses for public-key cryptography:
