@@ -5,10 +5,10 @@ defmodule ExCrypto do
   Elixir applications.
 
   This module provides functions for symmetric-key cryptographic operations using 
-  AES in GCM mode. The ExCrypto module attempts to reduce complexity by providing 
+  AES in GCM and CBC mode. The ExCrypto module attempts to reduce complexity by providing
   some sane default values for common operations.
   """
-
+  @aes_block_size 16
   defmacro __using__(_) do
     quote do
       import ExCrypto
@@ -34,6 +34,33 @@ defmodule ExCrypto do
 
   defp detail_normalize_error(kind, error) do
     {kind, Exception.normalize(kind, error), System.stacktrace}
+  end
+
+  @aes_block_size 16
+  @iv_bit_length 128
+
+  defp key_and_iv_for_algorithm(raw_key, raw_iv, algorithm) do
+    bits = algorithm_bits(algorithm)
+    {iv, _} = bitstring_size(raw_iv, @iv_bit_length)
+    {key, _} = bitstring_size(raw_key, bits)
+    {key, iv}
+  end
+
+  defp test_key_and_iv_against_algorithm(key, iv, algorithm) do
+    iv_size = bit_size(iv)
+    key_size = bit_size(key)
+    if iv_size != @iv_bit_length || key_size != algorithm_bits(algorithm) do
+      raise "IV must be exactly 128 bits and key must be exactly #{algorithm_bits(algorithm)} bits, or use encrypt!/decrypt! method"
+    end
+  end
+
+  defp algorithm_bits(algorithm) do
+    Regex.run(~r/(\d+)/, algorithm |> to_string ) |> List.first |> Integer.parse |> elem(0)
+  end
+
+  defp bitstring_size(string, size) do
+    <<iv::bitstring-size(size), rest::binary>> = string
+   {iv, rest}
   end
 
   @doc """
@@ -71,7 +98,7 @@ defmodule ExCrypto do
   @doc """
   Returns a random integer between `low` and `high`.
 
-  Accepts two `integer` arguments for the `low` and `high` boundaries. The `low` argument 
+  Accepts two `integer` arguments for the `low` and `high` boundaries. The `low` argument
   must be less than the `high` argument.
 
   ## Examples
@@ -211,18 +238,119 @@ defmodule ExCrypto do
   """
   @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
   def encrypt(key, authentication_data, initialization_vector, clear_text) do
-    case :crypto.block_encrypt(:aes_gcm, key, initialization_vector, {authentication_data, clear_text}) do
-      {cipher_text, cipher_tag} -> {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
+    _encrypt(key, initialization_vector, {authentication_data, clear_text}, :aes_gcm)
+  end
+
+
+  @doc """
+  Encrypt a `binary` with AES in CBC mode.
+
+  Returns a tuple containing the `initialization_vector`, and `cipher_text`.
+
+  At a high level encryption using AES in CBC mode looks like this:
+
+      key + clear_text -> init_vec + cipher_text
+
+  ## Examples
+
+      iex> clear_text = "my-clear-text"
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, clear_text)
+      iex> {iv, cipher_text} = payload
+      iex> assert(is_bitstring(cipher_text))
+      true
+
+  """
+  @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary}}} | {:error, binary}
+  def encrypt(key, clear_text) do
+    {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
+    _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
+  end
+
+  @doc """
+  Encrypt a `binary` with AES in CBC mode, taking the initial bits from key and ignoring extra bits.
+
+  Returns a tuple containing the `initialization_vector`, and `cipher_text`.
+
+  At a high level encryption using AES in CBC mode looks like this:
+
+      key + clear_text -> init_vec + cipher_text
+
+  ## Examples
+
+      iex> clear_text = "my-clear-text"
+      iex> {:ok, aes_256_key} = ExCrypto.rand_bytes(64)
+      iex> {:ok, {ad, payload}} = ExCrypto.encrypt!(aes_256_key, clear_text)
+      iex> {iv, cipher_text} = payload
+      iex> assert(is_bitstring(cipher_text))
+      true
+
+  """
+  @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary}}} | {:error, binary}
+  def encrypt!(raw_key, clear_text) do
+    {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
+    _encrypt!(raw_key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
+  end
+
+  @doc """
+  Encrypt a `binary` with AES in CBC mode, taking the initial bits from key and iv and ignoring extra bits.
+
+  Returns a tuple containing the `initialization_vector`, and `cipher_text`.
+
+  At a high level encryption using AES in CBC mode looks like this:
+
+      key + clear_text -> init_vec + cipher_text
+
+  ## Examples
+
+      iex> clear_text = "my-clear-text"
+      iex> {:ok, aes_256_key} = ExCrypto.rand_bytes(64)
+      iex> {:ok, iv} = ExCrypto.rand_bytes(32)
+      iex> {:ok, {ad, payload}} = ExCrypto.encrypt!(aes_256_key, clear_text)
+      iex> {iv, cipher_text} = payload
+      iex> assert(is_bitstring(cipher_text))
+      true
+
+  """
+  @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary}}} | {:error, binary}
+  def encrypt!(raw_key, raw_initialization_vector, clear_text) do
+    _encrypt!(raw_key, raw_initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
+  end
+
+
+  def _encrypt!(raw_key, raw_initialization_vector, encryption_payload, algorithm) do
+    {key, iv} = key_and_iv_for_algorithm(raw_key, raw_initialization_vector, algorithm)
+    _encrypt(key, iv, encryption_payload, algorithm)
+  end
+
+  defp _encrypt(key, initialization_vector, encryption_payload, algorithm) do
+    test_key_and_iv_against_algorithm(key, initialization_vector, algorithm)
+    case :crypto.block_encrypt(algorithm, key, initialization_vector, encryption_payload) do
+      {cipher_text, cipher_tag} ->
+        {authentication_data, _clear_text} = encryption_payload
+        {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
+      <<cipher_text::binary>> ->
+        {:ok, {initialization_vector, cipher_text}}
       x -> {:error, x}
     end
   catch
     kind, error -> normalize_error(kind, error)
   end
 
-  @doc """
-  Same as `encrypt/4` except the `initialization_vector` is automatically.
+  defp pad(data, block_size) do
+    to_add = block_size - rem(byte_size(data), block_size)
+    data <> to_string(:string.chars(to_add, to_add))
+  end
 
-  A 128 bit `initialization_vector` is generated automatically by `encrypt/3`. It returns a tuple 
+  defp unpad(data) do
+    to_remove = :binary.last(data)
+    :binary.part(data, 0, byte_size(data) - to_remove)
+  end
+
+  @doc """
+  Same as `encrypt/4` except the `initialization_vector` is automatically generated.
+
+  A 128 bit `initialization_vector` is generated automatically by `encrypt/3`. It returns a tuple
   containing the `initialization_vector`, the `cipher_text` and the `cipher_tag`.
 
   ## Examples
@@ -241,7 +369,7 @@ defmodule ExCrypto do
   @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
   def encrypt(key, authentication_data, clear_text) do
     {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
-    encrypt(key, authentication_data, initialization_vector, clear_text)
+    _encrypt(key, initialization_vector, {authentication_data, clear_text}, :aes_gcm)
   end
 
   @doc """
@@ -264,7 +392,38 @@ defmodule ExCrypto do
   """
   @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag) do
-    {:ok, :crypto.block_decrypt(:aes_gcm, key, initialization_vector, {authentication_data, cipher_text, cipher_tag})}
+    _decrypt(key, initialization_vector, {authentication_data, cipher_text, cipher_tag}, :aes_gcm)
+  end
+
+
+  @doc """
+  Returns a clear-text string decrypted with AES256 in CBC mode.
+
+  At a high level decryption using AES in CBC mode looks like this:
+
+      key + cipher_text  -> init_vec + clear_text
+
+  ## Examples
+
+      iex> clear_text = "my-clear-text"
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, {init_vec, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text)
+      iex> {:ok, val} = ExCrypto.decrypt(aes_256_key, init_vec, cipher_text)
+      iex> assert(val == clear_text)
+      true
+  """
+  @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, binary}
+  def decrypt(key, initialization_vector, cipher_text) do
+    _decrypt(key, initialization_vector, cipher_text |> :base64.decode, :aes_cbc256)
+    |> unpad
+  catch
+    {:error, {:badmatch, false}} -> decrypt(key, initialization_vector, cipher_text |> :base64.encode)
+    kind, error -> normalize_error(kind, error)
+  end
+
+  defp _decrypt(key, initialization_vector, cipher_data, algorithm) do
+    test_key_and_iv_against_algorithm(key, initialization_vector, algorithm)
+    {:ok, :crypto.block_decrypt(algorithm, key, initialization_vector, cipher_data)}
   catch
     kind, error -> normalize_error(kind, error)
   end
