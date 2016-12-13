@@ -325,8 +325,7 @@ defmodule ExCrypto do
 
       iex> clear_text = "my-clear-text"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, clear_text)
-      iex> {init_vec, cipher_text} = payload
+      iex> {:ok, {init_vec, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text)
       iex> {:ok, val} = ExCrypto.decrypt(aes_256_key, init_vec, cipher_text)
       iex> assert(val == clear_text)
       true
