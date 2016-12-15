@@ -1,10 +1,10 @@
 defmodule ExCrypto do
   @moduledoc """
-  The ExCrypto module exposes a subset of functionality from the Erlang `crypto` 
+  The ExCrypto module exposes a subset of functionality from the Erlang `crypto`
   module with the goal of making it easier to include strong cryptography in your
   Elixir applications.
 
-  This module provides functions for symmetric-key cryptographic operations using 
+  This module provides functions for symmetric-key cryptographic operations using
   AES in GCM and CBC mode. The ExCrypto module attempts to reduce complexity by providing
   some sane default values for common operations.
   """
@@ -46,11 +46,11 @@ defmodule ExCrypto do
       iex> rand_string = ExCrypto.rand_chars(24)
       iex> assert(String.length(rand_string) == 24)
       true
-      
+
       iex> rand_string = ExCrypto.rand_chars(32)
       iex> assert(String.length(rand_string) == 32)
       true
-      
+
       iex> rand_string = ExCrypto.rand_chars(44)
       iex> assert(String.length(rand_string) == 44)
       true
@@ -81,13 +81,13 @@ defmodule ExCrypto do
       true
       iex> assert(rand_int < 21)
       true
-      
+
       iex> rand_int = ExCrypto.rand_int(23, 99)
       iex> assert(rand_int > 22)
       true
       iex> assert(rand_int < 99)
       true
-      
+
       iex> rand_int = ExCrypto.rand_int(212, 736)
       iex> assert(rand_int > 211)
       true
@@ -109,7 +109,7 @@ defmodule ExCrypto do
       true
       iex> assert(bit_size(rand_bytes) == 128)
       true
-      
+
       iex> {:ok, rand_bytes} = ExCrypto.rand_bytes(24)
       iex> assert(byte_size(rand_bytes) == 24)
       true
@@ -140,7 +140,7 @@ defmodule ExCrypto do
   @doc """
   Returns an AES key.
 
-  Accepts a `key_type` (`:aes_128`|`:aes_192`|`:aes_256`) and `key_format` 
+  Accepts a `key_type` (`:aes_128`|`:aes_192`|`:aes_256`) and `key_format`
   (`:base64`|`:bytes`) to determine type of key to produce.
 
   ## Examples
@@ -160,7 +160,7 @@ defmodule ExCrypto do
       iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :base64)
       iex> assert String.length(key) == 32
       true
-      
+
       iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :bytes)
       iex> assert bit_size(key) == 128
       true
@@ -228,9 +228,7 @@ defmodule ExCrypto do
 
       iex> clear_text = "my-clear-text"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      iex> {:ok, iv} = ExCrypto.rand_bytes(16)
-      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, iv, clear_text)
-      iex> {iv, cipher_text} = payload
+      iex> {:ok, {iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text)
       iex> assert(is_bitstring(cipher_text))
       true
 
@@ -241,6 +239,9 @@ defmodule ExCrypto do
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
   end
 
+  def encrypt_with_iv(key, clear_text, initialization_vector) do
+    _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
+  end
 
   defp _encrypt(key, initialization_vector, encryption_payload, algorithm) do
     case :crypto.block_encrypt(algorithm, key, initialization_vector, encryption_payload) do
@@ -248,19 +249,19 @@ defmodule ExCrypto do
         {authentication_data, _clear_text} = encryption_payload
         {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
       <<cipher_text::binary>> ->
-        {:ok, {initialization_vector, cipher_text}}
+        {:ok, {initialization_vector, cipher_text }}
       x -> {:error, x}
     end
   catch
     kind, error -> normalize_error(kind, error)
   end
 
-  defp pad(data, block_size) do
+  def pad(data, block_size) do
     to_add = block_size - rem(byte_size(data), block_size)
     data <> to_string(:string.chars(to_add, to_add))
   end
 
-  defp unpad(data) do
+  def unpad(data) do
     to_remove = :binary.last(data)
     :binary.part(data, 0, byte_size(data) - to_remove)
   end
@@ -332,10 +333,9 @@ defmodule ExCrypto do
   """
   @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def decrypt(key, initialization_vector, cipher_text) do
-    _decrypt(key, initialization_vector, cipher_text |> :base64.decode, :aes_cbc256)
-    |> unpad
+    {:ok, padded_cleartext} = _decrypt(key, initialization_vector, cipher_text, :aes_cbc256)
+    {:ok, unpad(padded_cleartext)}
   catch
-    {:error, {:badmatch, false}} -> decrypt(key, initialization_vector, cipher_text |> :base64.encode)
     kind, error -> normalize_error(kind, error)
   end
 
