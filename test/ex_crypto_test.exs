@@ -11,7 +11,7 @@ defmodule ExCryptoTest do
     rand_string = ExCrypto.rand_chars(rand_char_count)
     assert(String.length(rand_string) == rand_char_count)
   end
-  
+
   test "generate random characters" do
     for n <- 1..100, do: run_rand_char_test()
   end
@@ -140,5 +140,18 @@ defmodule ExCryptoTest do
     assert(cipher_tag == pc_tag)
   end
 
+  test "test aes_cbc encrypt with auto-IV (256 bit key)" do
+    {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+
+    clear_text = "secret_message"
+    # encrypt
+    {:ok, {iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text)
+    assert(byte_size(iv) == 16)
+    assert(clear_text != cipher_text)
+
+    # decrypt
+    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_256_key, iv, cipher_text)
+    assert(decrypted_clear_text == clear_text)
+  end
 
 end
