@@ -9,6 +9,8 @@ defmodule ExCrypto do
   some sane default values for common operations.
   """
   @aes_block_size 16
+  @iv_bit_length 128
+  @bitlength_error "IV must be exactly 128 bits and key must be exactly 128, 192 or 256 bits"
   defmacro __using__(_) do
     quote do
       import ExCrypto
@@ -23,11 +25,14 @@ defmodule ExCrypto do
     end
   end
 
-  defp normalize_error(kind, error) do
-    case Exception.normalize(kind, error) do
-      %{message: message} ->
+  defp normalize_error(kind, error, key_and_iv \\ nil) do
+    key_error = test_key_and_iv_bitlength(key_and_iv)
+    cond do
+      key_error ->
+        key_error
+      %{message: message} = Exception.normalize(kind, error) ->
         {:error, message}
-      x ->
+      x = Exception.normalize(kind, error) ->
         {kind, x, System.stacktrace}
     end
   end
@@ -35,6 +40,13 @@ defmodule ExCrypto do
   defp detail_normalize_error(kind, error) do
     {kind, Exception.normalize(kind, error), System.stacktrace}
   end
+
+  defp test_key_and_iv_bitlength(nil), do: nil
+  defp test_key_and_iv_bitlength({key, iv}) when bit_size(iv) != 128, do: {:error, @bitlength_error}
+  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 128) == 0, do: nil
+  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 192) == 0, do: nil
+  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 256) == 0, do: nil
+  defp test_key_and_iv_bitlength({key, iv}), do: {:error, @bitlength_error}
 
   @doc """
   Returns random characters. Each character represents 6 bits of entropy.
@@ -212,6 +224,8 @@ defmodule ExCrypto do
   @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
   def encrypt(key, authentication_data, initialization_vector, clear_text) do
     _encrypt(key, initialization_vector, {authentication_data, clear_text}, :aes_gcm)
+  catch
+    kind, error -> normalize_error(kind, error)
   end
 
 
@@ -237,10 +251,36 @@ defmodule ExCrypto do
   def encrypt(key, clear_text) do
     {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc)
+  catch
+    kind, error ->
+      {:ok, initialization_vector} = rand_bytes(16)
+      normalize_error(kind, error, {key, initialization_vector})
   end
 
-  def encrypt_with_iv(key, clear_text, initialization_vector) do
+
+  @doc """
+  Encrypt a `binary` with AES in CBC mode providing explicit IV via map.
+
+  Returns a tuple containing the `initialization_vector`, and `cipher_text`.
+
+  At a high level encryption using AES in CBC mode looks like this:
+
+      key + clear_text + map -> init_vec + cipher_text
+
+  ## Examples
+
+      iex> clear_text = "my-clear-text"
+      iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, init_vec} = ExCrypto.rand_bytes(16)
+      iex> {:ok, {iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text, %{initialization_vector: init_vec})
+      iex> assert(is_bitstring(cipher_text))
+      true
+
+  """
+  def encrypt(key, clear_text, %{initialization_vector: initialization_vector}) do
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc)
+  catch
+    kind, error -> normalize_error(kind, error, {key, initialization_vector})
   end
 
   defp _encrypt(key, initialization_vector, encryption_payload, algorithm) do
@@ -252,8 +292,6 @@ defmodule ExCrypto do
         {:ok, {initialization_vector, cipher_text }}
       x -> {:error, x}
     end
-  catch
-    kind, error -> normalize_error(kind, error)
   end
 
   def pad(data, block_size) do
@@ -336,7 +374,7 @@ defmodule ExCrypto do
     {:ok, padded_cleartext} = _decrypt(key, initialization_vector, cipher_text, :aes_cbc)
     {:ok, unpad(padded_cleartext)}
   catch
-    kind, error -> normalize_error(kind, error)
+    kind, error -> normalize_error(kind, error, {key, initialization_vector})
   end
 
   defp _decrypt(key, initialization_vector, cipher_data, algorithm) do
