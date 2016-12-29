@@ -250,7 +250,7 @@ defmodule ExCrypto do
   @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary}}} | {:error, binary}
   def encrypt(key, clear_text) do
     {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
-    _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc)
+    _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
   catch
     kind, error ->
       {:ok, initialization_vector} = rand_bytes(16)
@@ -278,7 +278,7 @@ defmodule ExCrypto do
 
   """
   def encrypt(key, clear_text, %{initialization_vector: initialization_vector}) do
-    _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc)
+    _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
   catch
     kind, error -> normalize_error(kind, error, {key, initialization_vector})
   end
@@ -371,7 +371,7 @@ defmodule ExCrypto do
   """
   @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def decrypt(key, initialization_vector, cipher_text) do
-    {:ok, padded_cleartext} = _decrypt(key, initialization_vector, cipher_text, :aes_cbc)
+    {:ok, padded_cleartext} = _decrypt(key, initialization_vector, cipher_text, :aes_cbc256)
     {:ok, unpad(padded_cleartext)}
   catch
     kind, error -> normalize_error(kind, error, {key, initialization_vector})
