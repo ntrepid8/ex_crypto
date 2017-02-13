@@ -11,7 +11,7 @@ defmodule ExCryptoTest do
     rand_string = ExCrypto.rand_chars(rand_char_count)
     assert(String.length(rand_string) == rand_char_count)
   end
-  
+
   test "generate random characters" do
     for n <- 1..100, do: run_rand_char_test()
   end
@@ -140,5 +140,37 @@ defmodule ExCryptoTest do
     assert(cipher_tag == pc_tag)
   end
 
+  test "test aes_cbc encrypt with auto-IV (256 bit key)" do
+    {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+
+    clear_text = "secret_message"
+    # encrypt
+    {:ok, {iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text)
+    assert(byte_size(iv) == 16)
+    assert(clear_text != cipher_text)
+
+    # decrypt
+    {:ok, decrypted_clear_text} = ExCrypto.decrypt(aes_256_key, iv, cipher_text)
+    assert(decrypted_clear_text == clear_text)
+  end
+
+  test "errors with bad key length" do
+    {:ok, aes_bad_raw_key} = ExCrypto.rand_bytes(27)
+    aes_bad_key = Base.url_encode64(aes_bad_raw_key)
+
+    clear_text = "secret_message"
+    # encrypt
+    {:error, error_message} = ExCrypto.encrypt(aes_bad_key, clear_text)
+    assert(is_binary(error_message))
+  end
+
+  test "errors with bad iv length " do
+    {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+    {:ok, bad_iv} = ExCrypto.rand_bytes(17)
+    clear_text = "secret_message"
+    # encrypt
+    {:error, error_message} = ExCrypto.encrypt(aes_256_key, clear_text, %{initialization_vector: bad_iv})
+    assert(is_binary(error_message))
+  end
 
 end

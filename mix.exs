@@ -30,6 +30,7 @@ defmodule ExCrypto.Mixfile do
       {:poison, ">= 1.0.0"},
       {:timex, ">= 0.19.0", only: :test},
       {:earmark, "~> 0.1", only: :dev},
+      {:dialyxir, "~> 0.4", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.10", only: :dev}
     ]
   end
