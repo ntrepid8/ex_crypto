@@ -6,9 +6,9 @@ defmodule ExCrypto.Mixfile do
      version: "0.3.0",
      name: "ExCrypto",
      elixir: ">= 1.0.0",
-     description: description,
-     package: package,
-     deps: deps,
+     description: description(),
+     package: package(),
+     deps: deps(),
      docs: [extras: ["README.md"]]
    ]
   end
