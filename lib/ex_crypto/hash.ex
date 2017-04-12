@@ -1,6 +1,10 @@
 defmodule ExCrypto.Hash do
   def sha256(data) do
-    {:ok, :crypto.hash(:sha256, data)}
+    try do
+      {:ok, :crypto.hash(:sha256, data)}
+    rescue
+      e in ArgumentError -> {:error, e}
+    end
   end
 
   def sha256!(data) do
@@ -11,7 +15,11 @@ defmodule ExCrypto.Hash do
   end
 
   def sha512(data) do
-    {:ok, :crypto.hash(:sha512, data)}
+    try do
+      {:ok, :crypto.hash(:sha512, data)}
+    rescue
+      e in ArgumentError -> {:error, e}
+    end
   end
 
   def sha512!(data) do
