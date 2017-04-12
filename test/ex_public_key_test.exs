@@ -1,8 +1,9 @@
 defmodule ExPublicKeyTest do
   use ExUnit.Case
-  use Timex
   alias ExPublicKey.RSAPublicKey, as: RSAPublicKey
   alias ExPublicKey.RSAPrivateKey, as: RSAPrivateKey
+
+  @epoch :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
 
   setup do
     # generate a RSA key pair
@@ -147,7 +148,7 @@ defmodule ExPublicKeyTest do
     msg_serialized = Poison.encode!(msg)
 
     # generate time-stamp
-    ts = Date.now |> Date.to_secs
+    ts = ExCrypto.universal_time(:unix)
 
     # add a time-stamp
     ts_msg_serialized = "#{ts}|#{msg_serialized}"
