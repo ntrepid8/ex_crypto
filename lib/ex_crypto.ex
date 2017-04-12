@@ -8,6 +8,7 @@ defmodule ExCrypto do
   AES in GCM and CBC mode. The ExCrypto module attempts to reduce complexity by providing
   some sane default values for common operations.
   """
+  @epoch :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
   @aes_block_size 16
   @iv_bit_length 128
   @bitlength_error "IV must be exactly 128 bits and key must be exactly 128, 192 or 256 bits"
@@ -436,6 +437,11 @@ defmodule ExCrypto do
     cipher_text = Kernel.binary_part(decoded_parts, 16, (decoded_length-32))
     cipher_tag = Kernel.binary_part(decoded_parts, decoded_length, -16)
     {:ok, {iv, cipher_text, cipher_tag}}
+  end
+
+  @doc false
+  def universal_time(:unix) do
+    :calendar.datetime_to_gregorian_seconds(:calendar.universal_time()) - @epoch
   end
 
 end
