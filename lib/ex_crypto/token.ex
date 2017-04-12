@@ -57,8 +57,11 @@ defmodule ExCrypto.Token do
          {:ok, sig_ts} <- validate_sig_ts(sig_ts_raw, ttl, now_ts)
     do
       case HMAC.verify_hmac(["#{sig_ts}", payload], secret, mac) do
-        {:ok, true} -> {:ok, token}
-        _           -> {:error, :invalid_token}
+        {:ok, true} ->
+          {:ok, token}
+        _ ->
+          Logger.debug("HMAC failed to validate")
+          {:error, :invalid_token}
       end
     end
   end
@@ -81,8 +84,11 @@ defmodule ExCrypto.Token do
 
   defp decode_token(encoded_token) do
     case Base.url_decode64(encoded_token) do
-      {:ok, bin_token} -> decode_token_0(bin_token)
-      _                -> {:error, :invalid_token}
+      {:ok, bin_token} ->
+        decode_token_0(bin_token)
+      _ ->
+        Logger.debug("token was not encoded with valid URL safe base64 encoding")
+        {:error, :invalid_token}
     end
   end
 
@@ -90,6 +96,7 @@ defmodule ExCrypto.Token do
     {:ok, [payload, sig_ts, bin_mac]}
   end
   defp decode_token_0(_invalid_token) do
+    Logger.debug("token does not have the correct binary structure")
     {:error, :invalid_token}
   end
 
@@ -103,6 +110,7 @@ defmodule ExCrypto.Token do
 
       # signature timestamp is outside the valid range
       true ->
+        Logger.debug("timestamp #{sig_ts} with ttl #{ttl} is outside the valid range")
         {:error, :invalid_token}
     end
   end
