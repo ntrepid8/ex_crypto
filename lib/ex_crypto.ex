@@ -18,14 +18,6 @@ defmodule ExCrypto do
     end
   end
 
-  use Pipe
-
-  defmacrop pipe_ok(pipes) do
-    quote do
-      pipe_matching(x, {:ok, x}, unquote(pipes))
-    end
-  end
-
   defp normalize_error(kind, error, key_and_iv \\ nil) do
     key_error = test_key_and_iv_bitlength(key_and_iv)
     cond do
@@ -183,11 +175,11 @@ defmodule ExCrypto do
   @spec generate_aes_key(atom, atom) :: {:ok, binary} | {:error, binary}
   def generate_aes_key(key_type, key_format) do
     case {key_type, key_format} do
-      {:aes_128, :base64} -> pipe_ok rand_bytes(16) |> url_encode64
+      {:aes_128, :base64} -> rand_bytes!(16) |> url_encode64
       {:aes_128, :bytes} -> rand_bytes(16)
-      {:aes_192, :base64} -> pipe_ok rand_bytes(24) |> url_encode64
+      {:aes_192, :base64} -> rand_bytes!(24) |> url_encode64
       {:aes_192, :bytes} -> rand_bytes(24)
-      {:aes_256, :base64} -> pipe_ok rand_bytes(32) |> url_encode64
+      {:aes_256, :base64} -> rand_bytes!(32) |> url_encode64
       {:aes_256, :bytes} -> rand_bytes(32)
       _ -> {:error, "invalid key_type/key_format"}
     end
