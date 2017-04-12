@@ -38,16 +38,12 @@ defmodule ExCrypto do
     end
   end
 
-  defp detail_normalize_error(kind, error) do
-    {kind, Exception.normalize(kind, error), System.stacktrace}
-  end
-
   defp test_key_and_iv_bitlength(nil), do: nil
-  defp test_key_and_iv_bitlength({key, iv}) when bit_size(iv) != 128, do: {:error, @bitlength_error}
-  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 128) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 192) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 256) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, iv}), do: {:error, @bitlength_error}
+  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length, do: {:error, @bitlength_error}
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 128) == 0, do: nil
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 192) == 0, do: nil
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 256) == 0, do: nil
+  defp test_key_and_iv_bitlength({_key, _iv}), do: {:error, @bitlength_error}
 
   @doc """
   Returns random characters. Each character represents 6 bits of entropy.
@@ -74,9 +70,11 @@ defmodule ExCrypto do
     block_chars = 4
     block_count = div(num_chars, block_chars)
     block_partial = rem(num_chars, block_chars)
-    if block_partial > 0 do
-      block_count = block_count + 1
-    end
+    block_count =
+      case block_partial > 0 do
+        true -> block_count + 1
+        false -> block_count
+      end
     rand_string = Base.url_encode64(:crypto.strong_rand_bytes(block_count * block_bytes))
     String.slice(rand_string, 0, num_chars)
   end
