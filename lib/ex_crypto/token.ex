@@ -7,10 +7,13 @@ defmodule ExCrypto.Token do
   systems.
   """
   alias ExCrypto.HMAC
+  require Logger
 
+  # type specs
   @type option :: {:divider, String.t} |
                   {:date_time, {{integer, integer, integer}, {integer, integer, integer}}}
   @type options :: [option]
+  @type token :: binary
 
   @epoch :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
   @fifteen_min_in_seconds 15*60
@@ -18,14 +21,13 @@ defmodule ExCrypto.Token do
   @doc """
   Generate a signed token that carries of timestamp of when it was signed.
   """
-  @spec create(binary, binary, options) :: {:ok, binary} | {:error, any}
+  @spec create(binary, binary, options) :: {:ok, token} | {:error, any}
   def create(payload, secret, opts \\ []) do
-    divider = Keyword.get(opts, :divider, "|")
     now_dt = Keyword.get(opts, :date_time, :calendar.universal_time())
     now_ts = dt_to_ts(now_dt)
     case HMAC.hmac(["#{now_ts}", payload], secret) do
       {:ok, mac} ->
-          encoded_token = encode_token([payload, "#{now_ts}", mac], divider)
+          encoded_token = encode_token([payload, now_ts, mac])
         {:ok, encoded_token}
       {:error, reason} ->
         {:error, reason}
@@ -46,13 +48,12 @@ defmodule ExCrypto.Token do
   @doc """
   Verify a token. Ensure the signature is no older than the `ttl`.
   """
-  @spec verify(binary, binary, integer, options) :: {:ok, binary} | {:error, any}
+  @spec verify(token, binary, integer, options) :: {:ok, token} | {:error, any}
   def verify(token, secret, ttl, opts \\ []) do
-    divider = Keyword.get(opts, :divider, "|")
     now_dt = Keyword.get(opts, :date_time, :calendar.universal_time())
     now_ts = dt_to_ts(now_dt)
 
-    with {:ok, [payload, sig_ts_raw, mac]} <- decode_token_0(token, divider),
+    with {:ok, [payload, sig_ts_raw, mac]} <- decode_token(token),
          {:ok, sig_ts} <- validate_sig_ts(sig_ts_raw, ttl, now_ts)
     do
       case HMAC.verify_hmac(["#{sig_ts}", payload], secret, mac) do
@@ -73,81 +74,36 @@ defmodule ExCrypto.Token do
     end
   end
 
-  defp encode_token([payload, sig_ts, bin_mac], divider) do
-    encoded_payload_and_timestamp =
-      [payload, "#{sig_ts}"]
-      |> Enum.join(divider)
-      |> Base.encode64(padding: false)
-
-    [encoded_payload_and_timestamp, Base.encode64(bin_mac, padding: false)]
-    |> Enum.join(divider)
+  defp encode_token([payload, sig_ts, bin_mac]) do
+    <<bin_mac::bits-size(256), sig_ts::integer-size(64), payload::binary>>
+    |> Base.url_encode64()
   end
 
-  defp decode_token_0(token, divider) do
-    case String.split(token, divider) do
-      [encoded_payload_and_timestamp, encoded_mac] ->
-        decode_token_1([encoded_payload_and_timestamp, encoded_mac], divider)
-      _ ->
-        {:error, :invalid_token}
+  defp decode_token(encoded_token) do
+    case Base.url_decode64(encoded_token) do
+      {:ok, bin_token} -> decode_token_0(bin_token)
+      _                -> {:error, :invalid_token}
     end
   end
 
-  defp decode_token_1([encoded_payload_and_timestamp, encoded_mac], divider) do
-    case Base.decode64(encoded_payload_and_timestamp, padding: false) do
-      {:ok, decoded_payload_and_timestamp} ->
-        decode_token_2([decoded_payload_and_timestamp, encoded_mac], divider)
-      _ ->
-        {:error, :invalid_token}
-    end
+  defp decode_token_0(<<bin_mac::bits-size(256), sig_ts::integer-size(64), payload::binary>>) do
+    {:ok, [payload, sig_ts, bin_mac]}
+  end
+  defp decode_token_0(_invalid_token) do
+    {:error, :invalid_token}
   end
 
-  defp decode_token_2([decoded_payload_and_timestamp, encoded_mac], divider) do
-    case String.split(decoded_payload_and_timestamp, divider) do
-      [payload, sig_ts_str] ->
-        decode_token_3([payload, sig_ts_str, encoded_mac], divider)
-      _ ->
+  defp validate_sig_ts(sig_ts, ttl, now_ts) do
+    cond do
+      # signature timestamp plus TTL is in the future (not expired)
+      (sig_ts + ttl) > now_ts
+      # signature timestamp alone is not more than 15 minutes in the future (sanity)
+      and sig_ts < (now_ts + @fifteen_min_in_seconds) ->
+        {:ok, sig_ts}
+
+      # signature timestamp is outside the valid range
+      true ->
         {:error, :invalid_token}
-    end
-  end
-
-  defp decode_token_3([payload, sig_ts_str, encoded_mac], divider) do
-    case Base.decode64(encoded_mac, padding: false) do
-      {:ok, bin_mac} ->
-        {:ok, [payload, sig_ts_str, bin_mac]}
-      _ ->
-        {:error, :invalid_token}
-    end
-  end
-
-  defp split_token(token, divider) do
-    case String.split(token, divider) do
-      [payload, sig_ts, mac_str] ->
-        case Base.decode64(mac_str, padding: false) do
-          {:ok, mac_bin} -> {:ok, [payload, sig_ts, mac_bin]}
-          :error         -> {:error, :invalid_token}
-        end
-
-      _other ->
-        {:error, :invalid_token}
-    end
-  end
-
-  defp validate_sig_ts(sig_ts_raw, ttl, now_ts) do
-    case Integer.parse(sig_ts_raw) do
-      :error ->
-        {:error, :invalid_token}
-      {sig_ts, _} ->
-        cond do
-          # signature timestamp plus TTL is in the future (not expired)
-          (sig_ts + ttl) > now_ts
-          # signature timestamp alone is not more than 15 minutes in the future (sanity)
-          and sig_ts < (now_ts + @fifteen_min_in_seconds) ->
-            {:ok, sig_ts}
-
-          # signature timestamp is outside the valid range
-          true ->
-            {:error, :invalid_token}
-        end
     end
   end
 
