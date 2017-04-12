@@ -20,9 +20,8 @@ defmodule ExCrypto.Mixfile do
     applications(:prod)
   end
   defp applications(_) do
-    [:logger, :pipe]
+    [:logger, :pipe, :crypto, :public_key]
   end
-
 
   defp deps do
     [
