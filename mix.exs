@@ -20,12 +20,11 @@ defmodule ExCrypto.Mixfile do
     applications(:prod)
   end
   defp applications(_) do
-    [:logger, :pipe, :crypto, :public_key]
+    [:logger, :crypto, :public_key]
   end
 
   defp deps do
     [
-      {:pipe, ">= 0.0.2"},
       {:poison, "~> 2.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.15", only: :dev}
