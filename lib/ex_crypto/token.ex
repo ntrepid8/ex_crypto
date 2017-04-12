@@ -189,7 +189,7 @@ defmodule ExCrypto.Token do
   @spec is_token?(binary) :: true | false
   def is_token?(token) do
     case token do
-      <<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>> ->
+      <<_mac::bits-size(256), _iv::bits-size(128), _sig_ts::integer-size(64), _payload::binary>> ->
         true
       _other ->
         false

@@ -10,7 +10,7 @@ defmodule ExCrypto.Hash do
   def sha256!(data) do
     case sha256(data) do
       {:ok, digest} -> digest
-      {:error, reason} -> raise "sha256 error"
+      {:error, reason} -> raise "sha256 error: #{inspect reason}"
     end
   end
 
@@ -25,7 +25,7 @@ defmodule ExCrypto.Hash do
   def sha512!(data) do
     case sha512(data) do
       {:ok, digest} -> digest
-      {:error, reason} -> raise "sha512 error"
+      {:error, reason} -> raise "sha512 error: #{inspect reason}"
     end
   end
 end

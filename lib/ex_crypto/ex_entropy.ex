@@ -20,7 +20,7 @@ defmodule ExEntropy do
     accumulated_occurances = count_occurances(val_accumulator, val_list)
 
     # transform the map of occurrence counts into a list
-    ao_list = Enum.map(accumulated_occurances, fn {k, v} -> v end)
+    ao_list = Enum.map(accumulated_occurances, fn {_k, v} -> v end)
 
     # compute Shannon's entropy
     shannon_entropy_0(0, length(val_list), length(ao_list), ao_list)
@@ -30,7 +30,7 @@ defmodule ExEntropy do
     shannon_entropy(value, 8)  # byte blocks by default
   end
 
-  defp shannon_entropy_0(entropy, block_count, block_range, []) do
+  defp shannon_entropy_0(entropy, _block_count, _block_range, []) do
     entropy
   end
 
