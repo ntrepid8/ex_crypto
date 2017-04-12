@@ -102,9 +102,20 @@ defmodule ExCrypto.Token do
 
   defp validate_sig_ts(sig_ts, ttl, now_ts) do
     cond do
-      # signature timestamp plus TTL is in the future (not expired)
+      # too old
+      (sig_ts + ttl) < now_ts ->
+        Logger.debug("timestamp #{sig_ts} with ttl #{ttl} is too old")
+        {:error, :invalid_token}
+
+      # in future
+      (now_ts + @fifteen_min_in_seconds) < sig_ts ->
+        Logger.debug("timestamp #{sig_ts} with ttl #{ttl} is in the future")
+        {:error, :invalid_token}
+
+      # valid
+      ## signature timestamp plus TTL is in the future (not expired)
       (sig_ts + ttl) > now_ts
-      # signature timestamp alone is not more than 15 minutes in the future (sanity)
+      ## signature timestamp alone is not more than 15 minutes in the future (sanity)
       and sig_ts < (now_ts + @fifteen_min_in_seconds) ->
         {:ok, sig_ts}
 
