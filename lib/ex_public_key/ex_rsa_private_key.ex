@@ -1,15 +1,17 @@
 defmodule ExPublicKey.RSAPrivateKey do
 
-  defstruct version: nil,
-            public_modulus: nil,
-            public_exponent: nil,
-            private_exponent: nil,
-            prime_one: nil,
-            prime_two: nil,
-            exponent_one: nil,
-            exponent_two: nil,
-            ctr_coefficient: nil,
-            other_prime_infos: nil
+  defstruct [
+    version: nil,
+    public_modulus: nil,
+    public_exponent: nil,
+    private_exponent: nil,
+    prime_one: nil,
+    prime_two: nil,
+    exponent_one: nil,
+    exponent_two: nil,
+    ctr_coefficient: nil,
+    other_prime_infos: nil,
+  ]
 
   @type t :: %ExPublicKey.RSAPrivateKey{
     version: atom,
@@ -41,19 +43,19 @@ defmodule ExPublicKey.RSAPrivateKey do
 
   def as_sequence(rsa_private_key) do
     case rsa_private_key do
-      %ExPublicKey.RSAPrivateKey{} ->
+      %__MODULE__{} ->
         {:ok, {
           :RSAPrivateKey,
-          rsa_private_key.version,
-          rsa_private_key.public_modulus,
-          rsa_private_key.public_exponent,
-          rsa_private_key.private_exponent,
-          rsa_private_key.prime_one,
-          rsa_private_key.prime_two,
-          rsa_private_key.exponent_one,
-          rsa_private_key.exponent_two,
-          rsa_private_key.ctr_coefficient,
-          rsa_private_key.other_prime_infos,
+          Map.get(rsa_private_key, :version),
+          Map.get(rsa_private_key, :public_modulus),
+          Map.get(rsa_private_key, :public_exponent),
+          Map.get(rsa_private_key, :private_exponent),
+          Map.get(rsa_private_key, :prime_one),
+          Map.get(rsa_private_key, :prime_two),
+          Map.get(rsa_private_key, :exponent_one),
+          Map.get(rsa_private_key, :exponent_two),
+          Map.get(rsa_private_key, :ctr_coefficient),
+          Map.get(rsa_private_key, :other_prime_infos),
         }}
       _ ->
         {:error, "invalid ExPublicKey.RSAPrivateKey: #{inspect rsa_private_key}"}

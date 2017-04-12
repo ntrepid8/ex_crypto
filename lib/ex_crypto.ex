@@ -8,20 +8,13 @@ defmodule ExCrypto do
   AES in GCM and CBC mode. The ExCrypto module attempts to reduce complexity by providing
   some sane default values for common operations.
   """
+  @epoch :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
   @aes_block_size 16
   @iv_bit_length 128
   @bitlength_error "IV must be exactly 128 bits and key must be exactly 128, 192 or 256 bits"
   defmacro __using__(_) do
     quote do
       import ExCrypto
-    end
-  end
-
-  use Pipe
-
-  defmacrop pipe_ok(pipes) do
-    quote do
-      pipe_matching(x, {:ok, x}, unquote(pipes))
     end
   end
 
@@ -37,16 +30,12 @@ defmodule ExCrypto do
     end
   end
 
-  defp detail_normalize_error(kind, error) do
-    {kind, Exception.normalize(kind, error), System.stacktrace}
-  end
-
   defp test_key_and_iv_bitlength(nil), do: nil
-  defp test_key_and_iv_bitlength({key, iv}) when bit_size(iv) != 128, do: {:error, @bitlength_error}
-  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 128) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 192) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, iv}) when rem(bit_size(key), 256) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, iv}), do: {:error, @bitlength_error}
+  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length, do: {:error, @bitlength_error}
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 128) == 0, do: nil
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 192) == 0, do: nil
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 256) == 0, do: nil
+  defp test_key_and_iv_bitlength({_key, _iv}), do: {:error, @bitlength_error}
 
   @doc """
   Returns random characters. Each character represents 6 bits of entropy.
@@ -73,9 +62,11 @@ defmodule ExCrypto do
     block_chars = 4
     block_count = div(num_chars, block_chars)
     block_partial = rem(num_chars, block_chars)
-    if block_partial > 0 do
-      block_count = block_count + 1
-    end
+    block_count =
+      case block_partial > 0 do
+        true -> block_count + 1
+        false -> block_count
+      end
     rand_string = Base.url_encode64(:crypto.strong_rand_bytes(block_count * block_bytes))
     String.slice(rand_string, 0, num_chars)
   end
@@ -184,11 +175,11 @@ defmodule ExCrypto do
   @spec generate_aes_key(atom, atom) :: {:ok, binary} | {:error, binary}
   def generate_aes_key(key_type, key_format) do
     case {key_type, key_format} do
-      {:aes_128, :base64} -> pipe_ok rand_bytes(16) |> url_encode64
+      {:aes_128, :base64} -> rand_bytes!(16) |> url_encode64
       {:aes_128, :bytes} -> rand_bytes(16)
-      {:aes_192, :base64} -> pipe_ok rand_bytes(24) |> url_encode64
+      {:aes_192, :base64} -> rand_bytes!(24) |> url_encode64
       {:aes_192, :bytes} -> rand_bytes(24)
-      {:aes_256, :base64} -> pipe_ok rand_bytes(32) |> url_encode64
+      {:aes_256, :base64} -> rand_bytes!(32) |> url_encode64
       {:aes_256, :bytes} -> rand_bytes(32)
       _ -> {:error, "invalid key_type/key_format"}
     end
@@ -247,7 +238,7 @@ defmodule ExCrypto do
       true
 
   """
-  @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary}}} | {:error, binary}
+  @spec encrypt(binary, binary) :: {:ok, {binary, binary}} | {:error, binary}
   def encrypt(key, clear_text) do
     {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
@@ -277,6 +268,9 @@ defmodule ExCrypto do
       true
 
   """
+  @spec encrypt(binary, binary, %{initialization_vector: binary}) :: {:ok, {binary, {binary, binary, binary}}} |
+                                                                     {:ok, {binary, binary}} |
+                                                                     {:error, any}
   def encrypt(key, clear_text, %{initialization_vector: initialization_vector}) do
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
   catch
@@ -436,6 +430,11 @@ defmodule ExCrypto do
     cipher_text = Kernel.binary_part(decoded_parts, 16, (decoded_length-32))
     cipher_tag = Kernel.binary_part(decoded_parts, decoded_length, -16)
     {:ok, {iv, cipher_text, cipher_tag}}
+  end
+
+  @doc false
+  def universal_time(:unix) do
+    :calendar.datetime_to_gregorian_seconds(:calendar.universal_time()) - @epoch
   end
 
 end

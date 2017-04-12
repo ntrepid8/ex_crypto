@@ -12,7 +12,11 @@ defmodule ExCrypto.HMAC do
   end
 
   def hmac(data, key, [type: :sha256]) do
-    {:ok, :crypto.hmac(:sha256, key, data)}
+    try do
+      {:ok, :crypto.hmac(:sha256, key, data)}
+    rescue
+      e in ArgumentError -> {:error, e}
+    end
   end
 
   def verify_hmac(data, key, other_mac) do
@@ -28,5 +32,5 @@ defmodule ExCrypto.HMAC do
       {:error, reason} -> {:error, reason}
     end
   end
-  
+
 end
