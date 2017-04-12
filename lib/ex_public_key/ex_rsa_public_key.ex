@@ -1,8 +1,10 @@
 defmodule ExPublicKey.RSAPublicKey do
 
-  defstruct version: nil,
+  defstruct [
+    version: nil,
     public_modulus: nil,
-    public_exponent: nil
+    public_exponent: nil,
+  ]
 
   @type t :: %ExPublicKey.RSAPublicKey{
     version: atom,
@@ -22,8 +24,8 @@ defmodule ExPublicKey.RSAPublicKey do
       %ExPublicKey.RSAPublicKey{} ->
         {:ok, {
           :RSAPublicKey,
-          rsa_public_key.public_modulus,
-          rsa_public_key.public_exponent
+          Map.get(rsa_public_key, :public_modulus),
+          Map.get(rsa_public_key, :public_exponent),
         }}
       _ ->
         {:error, "invalid ExPublicKey.RSAPublicKey: #{rsa_public_key}"}

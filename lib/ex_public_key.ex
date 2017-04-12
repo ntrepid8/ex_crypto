@@ -25,8 +25,6 @@ defmodule ExPublicKey do
         ExPublicKey.loads(key_string)
       {:error, reason} ->
         {:error, reason}
-      _ ->
-        {:error, "invalid argument"}
     end
   end
 
