@@ -23,11 +23,12 @@ defmodule ExCrypto.Token do
   """
   @spec create(binary, binary, options) :: {:ok, token} | {:error, any}
   def create(payload, secret, opts \\ []) do
-    now_dt = Keyword.get(opts, :date_time, :calendar.universal_time())
-    now_ts = dt_to_ts(now_dt)
-    case HMAC.hmac(["#{now_ts}", payload], secret) do
+    sig_dt = Keyword.get(opts, :date_time, :calendar.universal_time())
+    sig_ts = dt_to_ts(sig_dt)
+    {:ok, iv} = ExCrypto.rand_bytes(16)
+    case HMAC.hmac([iv, "#{sig_ts}", payload], secret) do
       {:ok, mac} ->
-          encoded_token = encode_token([payload, now_ts, mac])
+          encoded_token = encode_token([iv, payload, sig_ts, mac])
         {:ok, encoded_token}
       {:error, reason} ->
         {:error, reason}
@@ -50,13 +51,13 @@ defmodule ExCrypto.Token do
   """
   @spec verify(token, binary, integer, options) :: {:ok, token} | {:error, any}
   def verify(token, secret, ttl, opts \\ []) do
-    now_dt = Keyword.get(opts, :date_time, :calendar.universal_time())
-    now_ts = dt_to_ts(now_dt)
+    sig_dt_challenge = Keyword.get(opts, :date_time, :calendar.universal_time())
+    sig_ts_challenge = dt_to_ts(sig_dt_challenge)
 
-    with {:ok, [payload, sig_ts_raw, mac]} <- decode_token(token),
-         {:ok, sig_ts} <- validate_sig_ts(sig_ts_raw, ttl, now_ts)
+    with {:ok, [iv, payload, sig_ts_raw, mac]} <- decode_token(token),
+         {:ok, sig_ts} <- validate_sig_ts(sig_ts_raw, ttl, sig_ts_challenge)
     do
-      case HMAC.verify_hmac(["#{sig_ts}", payload], secret, mac) do
+      case HMAC.verify_hmac([iv, "#{sig_ts}", payload], secret, mac) do
         {:ok, true} ->
           {:ok, token}
         _ ->
@@ -77,8 +78,8 @@ defmodule ExCrypto.Token do
     end
   end
 
-  defp encode_token([payload, sig_ts, bin_mac]) do
-    <<bin_mac::bits-size(256), sig_ts::integer-size(64), payload::binary>>
+  defp encode_token([iv, payload, sig_ts, mac]) do
+    <<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>>
     |> Base.url_encode64()
   end
 
@@ -92,8 +93,8 @@ defmodule ExCrypto.Token do
     end
   end
 
-  defp decode_token_0(<<bin_mac::bits-size(256), sig_ts::integer-size(64), payload::binary>>) do
-    {:ok, [payload, sig_ts, bin_mac]}
+  defp decode_token_0(<<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>>) do
+    {:ok, [iv, payload, sig_ts, mac]}
   end
   defp decode_token_0(_invalid_token) do
     Logger.debug("token does not have the correct binary structure")
