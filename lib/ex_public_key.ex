@@ -8,8 +8,6 @@ defmodule ExPublicKey do
     end
   end
 
-  use Pipe
-
   def normalize_error(kind, error) do
     case Exception.normalize(kind, error) do
       %{message: message} ->
@@ -44,13 +42,12 @@ defmodule ExPublicKey do
       x when x == 1 -> {:ok, Enum.at(pem_entries, 0)}
     end
   end
-  
+
   def loads(pem_string) do
     pem_entries = :public_key.pem_decode(pem_string)
-    pipe_matching x, {:ok, x},
-      validate_pem_length(pem_entries)
-      |> load_pem_entry
-      |> sort_key_tup
+    with {:ok, pem_entry} <- validate_pem_length(pem_entries),
+         {:ok, rsa_key} <- load_pem_entry(pem_entry),
+    do: sort_key_tup(rsa_key)
   end
 
   def loads!(pem_string) do
@@ -88,9 +85,8 @@ defmodule ExPublicKey do
   end
 
   def sign(msg, sha, private_key) do
-    pipe_matching x, {:ok, x},
-      ExPublicKey.RSAPrivateKey.as_sequence(private_key)
-      |> sign_0(msg, sha)
+    with {:ok, priv_key_sequence} <- ExPublicKey.RSAPrivateKey.as_sequence(private_key),
+      do: sign_0(priv_key_sequence, msg, sha)
   end
 
   def sign(msg, private_key) do
@@ -104,9 +100,8 @@ defmodule ExPublicKey do
   end
 
   def verify(msg, sha, signature, public_key) do
-    pipe_matching x, {:ok, x},
-      ExPublicKey.RSAPublicKey.as_sequence(public_key)
-      |> verify_0(msg, sha, signature)
+    with {:ok, pub_key_sequence} <- ExPublicKey.RSAPublicKey.as_sequence(public_key),
+      do: verify_0(pub_key_sequence, msg, sha, signature)
   end
 
   def verify(msg, signature, public_key) do
@@ -120,26 +115,12 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
-  defp url_encode64(bytes_to_encode) do
-    {:ok, Base.url_encode64(bytes_to_encode)}
-  end
-
-  defp encode64(bytes_to_encode) do
-    {:ok, Base.encode64(bytes_to_encode)}
-  end
-
-  def encrypt_private(clear_text, private_key, [url_safe: false]) do
-    pipe_matching x, {:ok, x},
-      ExPublicKey.RSAPrivateKey.as_sequence(private_key)
-      |> encrypt_private_0(clear_text)
-      |> encode64
-  end
-
-  def encrypt_private(clear_text, private_key, _opts \\ []) do
-    pipe_matching x, {:ok, x},
-      ExPublicKey.RSAPrivateKey.as_sequence(private_key)
-      |> encrypt_private_0(clear_text)
-      |> url_encode64
+  def encrypt_private(clear_text, private_key, opts \\ []) do
+    url_safe = Keyword.get(opts, :url_safe, true)
+    with {:ok, priv_key_sequence} <- ExPublicKey.RSAPrivateKey.as_sequence(private_key),
+         {:ok, cipher_bytes} <- encrypt_private_0(priv_key_sequence, clear_text),
+          encoded_cipher_text = encode(cipher_bytes, url_safe),
+      do: {:ok, encoded_cipher_text}
   end
 
   defp encrypt_public_0(rsa_pub_key_seq, clear_text) do
@@ -149,18 +130,12 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
-  def encrypt_public(clear_text, public_key, [url_safe: false]) do
-    pipe_matching x, {:ok, x},
-      ExPublicKey.RSAPublicKey.as_sequence(public_key)
-      |> encrypt_public_0(clear_text)
-      |> encode64
-  end
-
-  def encrypt_public(clear_text, public_key, _opts \\ []) do
-    pipe_matching x, {:ok, x},
-      ExPublicKey.RSAPublicKey.as_sequence(public_key)
-      |> encrypt_public_0(clear_text)
-      |> url_encode64
+  def encrypt_public(clear_text, public_key, opts \\ []) do
+    url_safe = Keyword.get(opts, :url_safe, true)
+    with {:ok, pub_key_sequence} <- ExPublicKey.RSAPublicKey.as_sequence(public_key),
+         {:ok, cipher_bytes} <- encrypt_public_0(pub_key_sequence, clear_text),
+          encoded_cipher_text = encode(cipher_bytes, url_safe),
+      do: {:ok, encoded_cipher_text}
   end
 
   defp decrypt_private_0(cipher_bytes, private_key) do
@@ -177,18 +152,11 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
-  def decrypt_private(cipher_text, private_key, [url_safe: false]) do
-    pipe_matching x, {:ok, x},
-      Base.decode64(cipher_text)
-      |> decrypt_private_0(private_key)
-      |> decrypt_private_1
-  end
-
-  def decrypt_private(cipher_text, private_key, _opts \\ []) do
-    pipe_matching x, {:ok, x},
-      Base.url_decode64(cipher_text)
-      |> decrypt_private_0(private_key)
-      |> decrypt_private_1
+  def decrypt_private(cipher_text, private_key, opts \\ []) do
+    url_safe = Keyword.get(opts, :url_safe, true)
+    with {:ok, decoded_cipher_text} <- decode(cipher_text, url_safe),
+         {:ok, [cipher_bytes, rsa_priv_key_seq]} <- decrypt_private_0(decoded_cipher_text, private_key),
+      do: decrypt_private_1([cipher_bytes, rsa_priv_key_seq])
   end
 
   defp decrypt_public_0(cipher_bytes, public_key) do
@@ -205,17 +173,26 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
-  def decrypt_public(cipher_text, public_key, [url_safe: false]) do
-    pipe_matching x, {:ok, x},
-      Base.decode64(cipher_text)
-      |> decrypt_public_0(public_key)
-      |> decrypt_public_1
+  def decrypt_public(cipher_text, public_key, opts \\ []) do
+    url_safe = Keyword.get(opts, :url_safe, true)
+    with {:ok, decoded_cipher_text} <- decode(cipher_text, url_safe),
+         {:ok, [cipher_bytes, rsa_pub_key_seq]} <- decrypt_public_0(decoded_cipher_text, public_key),
+      do: decrypt_public_1([cipher_bytes, rsa_pub_key_seq])
   end
 
-  def decrypt_public(cipher_text, public_key, _opts \\ []) do
-    pipe_matching x, {:ok, x},
-      Base.url_decode64(cipher_text)
-      |> decrypt_public_0(public_key)
-      |> decrypt_public_1
+  # Helpers
+  defp decode(encoded_payload, _url_safe = true) do
+    Base.url_decode64(encoded_payload)
   end
+  defp decode(encoded_payload, _url_safe = false) do
+    Base.decode64(encoded_payload)
+  end
+
+  defp encode(payload_bytes, _url_safe = true) do
+    Base.url_encode64(payload_bytes)
+  end
+  defp encode(payload_bytes, _url_safe = false) do
+    Base.encode64(payload_bytes)
+  end
+
 end
