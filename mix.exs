@@ -17,7 +17,7 @@ defmodule ExCrypto.Mixfile do
     [applications: applications(Mix.env)]
   end
   defp applications(:test) do
-    applications(:prod) ++ [:tzdata]
+    applications(:prod)
   end
   defp applications(_) do
     [:logger, :pipe]
@@ -27,11 +27,9 @@ defmodule ExCrypto.Mixfile do
   defp deps do
     [
       {:pipe, ">= 0.0.2"},
-      {:poison, ">= 1.0.0"},
-      {:timex, ">= 0.19.0", only: :test},
-      {:earmark, "~> 0.1", only: :dev},
+      {:poison, "~> 2.0"},
       {:dialyxir, "~> 0.4", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.10", only: :dev}
+      {:ex_doc, "~> 0.15", only: :dev}
     ]
   end
 
