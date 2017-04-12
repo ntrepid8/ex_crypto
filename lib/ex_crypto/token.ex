@@ -1,10 +1,38 @@
 defmodule ExCrypto.Token do
   @moduledoc """
-  The ExCrypto Token helper.
+  Use `ExCrypto.Token` to create unforgeable HMAC tokens that expire after a TTL.
 
-  Generate signed tokens that can expire after a certain amount of time. These
-  tokens are useful when you have a secret that is not shared with any other
-  systems.
+  Tokens created with this module have the following properties:
+
+  - unforgeable
+  - expire after a given TTL
+  - may contain useful information in the payload (e.g. user_id or permissions)
+  - safe to use in HTTP headers or URLs (encoded with `Base.url_encode64/1`)
+
+  ## Basic usage
+
+  Often it's convenient to include a JSON Object as the payload. That way the data in the payload
+  is available after the token is verified like this:
+
+      iex> payload = %{"user_id" => 12345}
+      iex> encoded_payload = Poison.encode!(payload)
+      iex> {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, token} = ExCrypto.Token.create(payload, secret)
+      iex> ttl = (15 * 60)  # 15 minute TTL (in seconds)
+      iex> {:ok, verified_payload} = ExCrypto.Token.verify(token, secret, ttl)
+      iex> decoded_verified_payload = Poison.decode!(verified_payload)
+      iex> decoded_verified_payload == payload
+      iex> Map.get(decoded_verified_payload, "user_id")
+      12345
+
+  ## Notes
+
+  - the payload is not encrypted, only base64 encoded, **do not include secrets in the payload**
+  - do not create a new secret each time, it must be stored and kept *secret*
+  - do not include the secret in the payload
+  - store the secret in the config for your app if using one global secret
+  - store the secret on a given record (e.g. user record) if using a unique secret for each user
+
   """
   alias ExCrypto.HMAC
   require Logger
@@ -14,14 +42,24 @@ defmodule ExCrypto.Token do
                   {:date_time, {{integer, integer, integer}, {integer, integer, integer}}}
   @type options :: [option]
   @type token :: binary
+  @type payload :: binary
 
   @epoch :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
   @fifteen_min_in_seconds 15*60
 
   @doc """
   Generate a signed token that carries of timestamp of when it was signed.
+
+  ## Examples
+
+      iex> payload = "my binary payload"
+      iex> {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, token} = ExCrypto.Token.create(payload, secret)
+      iex> ExCrypto.Token.is_token?(token)
+      true
+
   """
-  @spec create(binary, binary, options) :: {:ok, token} | {:error, any}
+  @spec create(payload, binary, options) :: {:ok, token} | {:error, any}
   def create(payload, secret, opts \\ []) do
     sig_dt = Keyword.get(opts, :date_time, :calendar.universal_time())
     sig_ts = dt_to_ts(sig_dt)
@@ -38,7 +76,7 @@ defmodule ExCrypto.Token do
   @doc """
   Like `create/3` but raises an exception on error.
   """
-  @spec create!(binary, binary, options) :: binary | no_return
+  @spec create!(payload, binary, options) :: binary | no_return
   def create!(payload, secret, opts \\ []) do
     case create(payload, secret, opts) do
       {:ok, token} -> token
@@ -48,8 +86,21 @@ defmodule ExCrypto.Token do
 
   @doc """
   Verify a token. Ensure the signature is no older than the `ttl`.
+
+  ## Examples
+
+      iex> payload = "my binary payload"
+      iex> {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, token} = ExCrypto.Token.create(payload, secret)
+      iex> ExCrypto.Token.is_token?(token)
+      true
+      iex> ttl = (15 * 60)  # 15 minute TTL (in seconds)
+      iex> {:ok, verified_payload} = ExCrypto.Token.verify(token, secret, ttl)
+      iex> verified_payload == payload
+      true
+
   """
-  @spec verify(token, binary, integer, options) :: {:ok, token} | {:error, any}
+  @spec verify(token, binary, integer, options) :: {:ok, payload} | {:error, any}
   def verify(token, secret, ttl, opts \\ []) do
     sig_dt_challenge = Keyword.get(opts, :date_time, :calendar.universal_time())
     sig_ts_challenge = dt_to_ts(sig_dt_challenge)
@@ -59,7 +110,7 @@ defmodule ExCrypto.Token do
     do
       case HMAC.verify_hmac([iv, "#{sig_ts}", payload], secret, mac) do
         {:ok, true} ->
-          {:ok, token}
+          {:ok, payload}
         _ ->
           Logger.debug("HMAC failed to validate")
           {:error, :invalid_token}
@@ -70,13 +121,39 @@ defmodule ExCrypto.Token do
   @doc """
   Like `verify/4` but raises an exception on error.
   """
-  @spec verify!(binary, binary, integer, options) :: binary | no_return
+  @spec verify!(token, binary, integer, options) :: binary | no_return
   def verify!(token, secret, ttl, opts \\ []) do
     case verify(token, secret, ttl, opts) do
       {:ok, token} -> token
       {:error, reason} -> raise reason
     end
   end
+
+  @doc """
+  Check if a given binary has the correct structure to be a token.
+
+  This does not mean it is a valid token, only that it has all the parts of a token.
+
+  ## Examples
+
+      iex> payload = "my binary payload"
+      iex> {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+      iex> {:ok, token} = ExCrypto.Token.create(payload, secret)
+      iex> ExCrypto.Token.is_token?(token)
+      true
+
+  """
+  @spec is_token?(binary) :: true | false
+  def is_token?(token) do
+    case token do
+      <<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>> ->
+        true
+      _other ->
+        false
+    end
+  end
+
+  # Helpers
 
   defp encode_token([iv, payload, sig_ts, mac]) do
     <<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>>
@@ -131,7 +208,7 @@ defmodule ExCrypto.Token do
   #   :calendar.gregorian_seconds_to_datetime(timestamp + @epoch)
   # end
 
-  def dt_to_ts(date_time) do
+  defp dt_to_ts(date_time) do
     :calendar.datetime_to_gregorian_seconds(date_time) - @epoch
   end
 end

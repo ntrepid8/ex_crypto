@@ -1,5 +1,6 @@
 defmodule ExCrypto.ExTokenTest do
   use ExUnit.Case
+  doctest ExCrypto.Token
   require Logger
 
   test "Token.create/3 and Token.verify/4 (basic)" do
@@ -16,6 +17,8 @@ defmodule ExCrypto.ExTokenTest do
     ttl = 15*60  # 15 minute TTL
     result = ExCrypto.Token.verify(token, secret, ttl)
     assert assert match?({:ok, _}, result)
+    {:ok, v_payload} = result
+    assert v_payload == encoded_payload
   end
 
   test "Token.create/3 and Token.verify/4 (token too old)" do
