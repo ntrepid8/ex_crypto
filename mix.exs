@@ -43,6 +43,6 @@ defmodule ExCrypto.Mixfile do
       maintainers: ["Josh Austin"],
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/ntrepid8/ex_crypto",
-               "Docs" => "https://ntrepid8.github.io/ex_crypto/extra-api-reference.html"}]
+               "Docs" => "https://hexdocs.pm/ex_crypto/readme.html"}]
   end
 end
