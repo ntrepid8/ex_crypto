@@ -3,7 +3,7 @@ defmodule ExCrypto.Mixfile do
 
   def project do
     [app: :ex_crypto,
-     version: "0.4.0",
+     version: "0.5.0",
      name: "ExCrypto",
      elixir: ">= 1.0.0",
      description: description(),
@@ -43,6 +43,6 @@ defmodule ExCrypto.Mixfile do
       maintainers: ["Josh Austin"],
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/ntrepid8/ex_crypto",
-               "Docs" => "https://ntrepid8.github.io/ex_crypto/extra-api-reference.html"}]
+               "Docs" => "https://hexdocs.pm/ex_crypto/readme.html"}]
   end
 end
