@@ -2,6 +2,8 @@
 
 The goal of `ExCrypto` and `ExPublicKey` is to expose a subset of the functionality from the Erlang modules `crypto` and `public_key` so that writing secure Elixir applications is a little bit easier without being overwhelming. In many functions some sane defaults are provided to decrease the complexity of implementing those functions in your own code.
 
+Get from hex.pm: <https://hex.pm/packages/ex_crypto>
+
 Checkout the docs at: <https://hexdocs.pm/ex_crypto/readme.html>
 
 ## Build Status
