@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.5.0
+- Enhancements
+    - update poison dependency (enable use with Poison 3.0)
+- Contributors (thanks!)
+    - [MarcAntoine-Arnaud](https://github.com/MarcAntoine-Arnaud)
+
 ## v0.4.0
 - Enhancements
   - add helpers for symmetric crypto tokens
