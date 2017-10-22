@@ -17,10 +17,14 @@ defmodule ExPublicKey do
     end
   end
 
-  def load(file_path) do
+  def load(file_path, passphrase \\ nil) do
     case File.read(file_path) do
       {:ok, key_string} ->
-        ExPublicKey.loads(key_string)
+        if passphrase do
+          ExPublicKey.loads(key_string, passphrase)
+        else
+          ExPublicKey.loads(key_string)
+        end
       {:error, reason} ->
         {:error, reason}
     end
@@ -50,6 +54,13 @@ defmodule ExPublicKey do
     do: sort_key_tup(rsa_key)
   end
 
+  def loads(pem_string, passphrase) do
+    pem_entries = :public_key.pem_decode(pem_string)
+    with {:ok, pem_entry} <- validate_pem_length(pem_entries),
+         {:ok, rsa_key} <- load_pem_entry(pem_entry, passphrase),
+    do: sort_key_tup(rsa_key)
+  end
+
   def loads!(pem_string) do
     case loads(pem_string) do
       {:ok, key} ->
@@ -59,8 +70,17 @@ defmodule ExPublicKey do
     end
   end
 
-  defp load_pem_entry(pem_entry) do
-    {:ok, :public_key.pem_entry_decode(pem_entry)}
+  defp load_pem_entry(pem_entry, passphrase \\ nil) do
+    cond do
+      is_binary(passphrase) ->
+        load_pem_entry(pem_entry, String.to_charlist(passphrase))
+
+      is_nil(passphrase) ->
+        {:ok, :public_key.pem_entry_decode(pem_entry)}
+
+      true ->
+        {:ok, :public_key.pem_entry_decode(pem_entry, passphrase)}
+    end
   catch
     kind, error ->
       ExPublicKey.normalize_error(kind, error)
