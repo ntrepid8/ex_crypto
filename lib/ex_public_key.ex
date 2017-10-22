@@ -30,8 +30,8 @@ defmodule ExPublicKey do
     end
   end
 
-  def load!(file_path) do
-    case load(file_path) do
+  def load!(file_path, passphrase \\ nil) do
+    case load(file_path, passphrase) do
       {:ok, key} ->
         key
       {:error, reason} ->
@@ -47,22 +47,15 @@ defmodule ExPublicKey do
     end
   end
 
-  def loads(pem_string) do
-    pem_entries = :public_key.pem_decode(pem_string)
-    with {:ok, pem_entry} <- validate_pem_length(pem_entries),
-         {:ok, rsa_key} <- load_pem_entry(pem_entry),
-    do: sort_key_tup(rsa_key)
-  end
-
-  def loads(pem_string, passphrase) do
+  def loads(pem_string, passphrase \\ nil) do
     pem_entries = :public_key.pem_decode(pem_string)
     with {:ok, pem_entry} <- validate_pem_length(pem_entries),
          {:ok, rsa_key} <- load_pem_entry(pem_entry, passphrase),
     do: sort_key_tup(rsa_key)
   end
 
-  def loads!(pem_string) do
-    case loads(pem_string) do
+  def loads!(pem_string, passphrase \\ nil) do
+    case loads(pem_string, passphrase) do
       {:ok, key} ->
         key
       {:error, reason} ->

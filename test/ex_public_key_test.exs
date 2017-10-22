@@ -11,7 +11,8 @@ defmodule ExPublicKeyTest do
     rand_string = ExCrypto.rand_chars(4)
     rsa_private_key_path = "/tmp/test_ex_crypto_rsa_private_key_#{rand_string}.pem"
     rsa_public_key_path = "/tmp/test_ex_crypto_rsa_public_key_#{rand_string}.pem"
-    
+    rsa_secure_private_key_path = "/tmp/test_ex_crypto_rsa_secure_private_key_#{rand_string}.pem"
+
     # generate the RSA private key with openssl
     System.cmd(
       "openssl", ["genrsa", "-out", rsa_private_key_path, "2048"])
@@ -20,17 +21,26 @@ defmodule ExPublicKeyTest do
     System.cmd(
       "openssl", ["rsa", "-in", rsa_private_key_path, "-outform", "PEM", "-pubout", "-out", rsa_public_key_path])
 
+    # generate a passphrase protected RSA private key with openssl
+    System.cmd(
+      "openssl", ["genrsa", "-out", rsa_secure_private_key_path, "-passout", "pass:#{rand_string}", "2048"])
+
     on_exit fn ->
       # cleanup: delete the temp keys
       File.rm!(rsa_private_key_path)
       File.rm!(rsa_public_key_path)
+      File.rm!(rsa_secure_private_key_path)
     end
 
-    {:ok, rsa_private_key_path: rsa_private_key_path, rsa_public_key_path: rsa_public_key_path}
+    {:ok, [
+      rsa_private_key_path: rsa_private_key_path,
+      rsa_public_key_path: rsa_public_key_path,
+      rsa_secure_private_key_path: rsa_secure_private_key_path,
+      passphrase: rand_string,
+    ]}
   end
 
   test "read RSA keys in PEM format", context do
-
     # IO.inspect context
     # load the private key
     {:ok, priv_key_string} = File.read(context[:rsa_private_key_path])
@@ -43,6 +53,13 @@ defmodule ExPublicKeyTest do
     rsa_pub_key = ExPublicKey.loads!(pub_key_string)
     assert(is_map(rsa_pub_key))
     assert(rsa_pub_key.__struct__ == RSAPublicKey)
+  end
+
+  test "read secure RSA keys", context do
+    {:ok, secure_priv_key_string} = File.read(context[:rsa_secure_private_key_path])
+    secure_rsa_priv_key = ExPublicKey.loads!(secure_priv_key_string, context[:passphrase])
+    assert(is_map(secure_rsa_priv_key))
+    assert(secure_rsa_priv_key.__struct__ == RSAPrivateKey)
   end
 
   test "try random string in key loads function and observe ExCrypto.Error" do
