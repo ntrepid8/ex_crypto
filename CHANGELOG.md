@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.6.0
+- Enhancements
+    - add support for RSA keys with passwords
+- Contributors (thanks!)
+    - [sheharyarn](https://github.com/sheharyarn)
+
 ## v0.5.0
 - Enhancements
     - update poison dependency (enable use with Poison 3.0)
