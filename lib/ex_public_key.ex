@@ -193,7 +193,40 @@ defmodule ExPublicKey do
       do: decrypt_public_1([cipher_bytes, rsa_pub_key_seq])
   end
 
+  def generate_key, do: generate_key(:rsa, 2048, 65537)
+  def generate_key(bits), do: generate_key(:rsa, bits, 65537)
+  def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
+
+  def generate_key(type, size_in_bits, public_exp) do
+    {:ok, :public_key.generate_key({type, size_in_bits, public_exp}) |> ExPublicKey.RSAPrivateKey.from_sequence }
+  catch
+    kind, error ->
+      ExPublicKey.normalize_error(kind, error)
+  end
+
+  def public_key_from_private_key(private_key = %ExPublicKey.RSAPrivateKey{}) do
+    {:ok, ExPublicKey.RSAPublicKey.from_sequence({:RSAPublicKey, private_key.public_modulus, private_key.public_exponent})}
+  end
+
+  def pem_encode(key = %ExPublicKey.RSAPrivateKey{}) do
+    with {:ok, key_sequence} <- ExPublicKey.RSAPrivateKey.as_sequence(key),
+      do: pem_entry_encode(key_sequence, :RSAPrivateKey)
+  end
+
+  def pem_encode(key = %ExPublicKey.RSAPublicKey{}) do
+    with {:ok, key_sequence} <- ExPublicKey.RSAPublicKey.as_sequence(key),
+      do: pem_entry_encode(key_sequence, :RSAPublicKey)
+  end
+
   # Helpers
+  defp pem_entry_encode(key, type) do
+    pem_entry = :public_key.pem_entry_encode(type, key)
+    {:ok, :public_key.pem_encode([pem_entry])}
+  catch
+    kind, error ->
+      ExPublicKey.normalize_error(kind, error)
+  end
+
   defp decode(encoded_payload, _url_safe = true) do
     Base.url_decode64(encoded_payload)
   end

@@ -55,12 +55,22 @@ defmodule ExPublicKeyTest do
     assert(rsa_pub_key.__struct__ == RSAPublicKey)
   end
 
+  test "converts RSA keys to PEM format and back", context do
+    {:ok, rsa_priv_key} = ExPublicKey.generate_key
+    {:ok, priv_key_string} = ExPublicKey.pem_encode(rsa_priv_key)
+
+    rsa_priv_key_decoded = ExPublicKey.loads!(priv_key_string)
+    assert(is_map(rsa_priv_key_decoded))
+    assert(rsa_priv_key_decoded == rsa_priv_key)
+  end
+
   test "read secure RSA keys", context do
     {:ok, secure_priv_key_string} = File.read(context[:rsa_secure_private_key_path])
     secure_rsa_priv_key = ExPublicKey.loads!(secure_priv_key_string, context[:passphrase])
     assert(is_map(secure_rsa_priv_key))
     assert(secure_rsa_priv_key.__struct__ == RSAPrivateKey)
   end
+
 
   test "try random string in key loads function and observe ExCrypto.Error" do
     assert_raise ExCrypto.Error, fn ->
@@ -113,7 +123,20 @@ defmodule ExPublicKeyTest do
     {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
     rand_chars = ExCrypto.rand_chars(16)
     plain_text = "This is a test message to encrypt, complete with some entropy (#{rand_chars})."
-    
+
+    {:ok, cipher_text} = ExPublicKey.encrypt_private(plain_text, rsa_priv_key)
+    assert(cipher_text != plain_text)
+
+    {:ok, decrypted_plain_text} = ExPublicKey.decrypt_public(cipher_text, rsa_pub_key)
+    assert(decrypted_plain_text == plain_text)
+  end
+
+  test "RSA private_key encrypt and RSA public_key decrypt using generated keys", context do
+    {:ok, rsa_priv_key} = ExPublicKey.generate_key
+    {:ok, rsa_pub_key} = ExPublicKey.public_key_from_private_key(rsa_priv_key)
+    rand_chars = ExCrypto.rand_chars(16)
+    plain_text = "This is a test message to encrypt, complete with some entropy (#{rand_chars})."
+
     {:ok, cipher_text} = ExPublicKey.encrypt_private(plain_text, rsa_priv_key)
     assert(cipher_text != plain_text)
 
