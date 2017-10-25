@@ -1,4 +1,11 @@
 defmodule ExPublicKey do
+  @moduledoc """
+  API module for public-key infrastructure.
+
+  ## Description
+
+  Mostly wrappers Erlang' `:public_key` module, to help simplify using public/private key encryption in Elixir.
+  """
 
   defmacro __using__(_) do
     quote do
@@ -17,19 +24,37 @@ defmodule ExPublicKey do
     end
   end
 
+
+  @doc """
+  Loads PEM string from the specified file path and returns a `ExPublicKey.RSAPrivateKey` or a `ExPublicKey.RSAPublicKey` key.
+  Optionally, a passphrase can be given to decode the PEM certificate.
+
+  ## Examples
+      {:ok, key} = ExPublicKey.load("/file/to/cert.pem")
+
+      {:ok, key} = ExPublicKey.load("/file/to/cert.pem", "pem_password")
+
+  """
   def load(file_path, passphrase \\ nil) do
     case File.read(file_path) do
       {:ok, key_string} ->
-        if passphrase do
-          ExPublicKey.loads(key_string, passphrase)
-        else
-          ExPublicKey.loads(key_string)
-        end
+        ExPublicKey.loads(key_string, passphrase)
       {:error, reason} ->
         {:error, reason}
     end
   end
 
+  @doc """
+  Loads PEM string from the specified file path and returns a `ExPublicKey.RSAPrivateKey` or a `ExPublicKey.RSAPublicKey` key.
+  Optionally, a passphrase can be given to decode the PEM certificate.
+  Identical to `ExPublicKey.load/2`, except that load! raises an ExCrypto.Error when an exception occurs.
+
+  ## Examples
+      key = ExPublicKey.load("/file/to/cert.pem")
+
+      key = ExPublicKey.load("/file/to/cert.pem", "pem_password")
+
+  """
   def load!(file_path, passphrase \\ nil) do
     case load(file_path, passphrase) do
       {:ok, key} ->
@@ -47,6 +72,16 @@ defmodule ExPublicKey do
     end
   end
 
+  @doc """
+  Converts a PEM string into an `ExPublicKey.RSAPrivateKey` or an `ExPublicKey.RSAPublicKey` key.
+  Optionally, a passphrase can be given to decode the PEM certificate.
+
+  ## Examples
+      {:ok, key} = ExPublicKey.loads(pem_string)
+
+      {:ok, key} = ExPublicKey.loads(pem_string, "pem_password")
+
+  """
   def loads(pem_string, passphrase \\ nil) do
     pem_entries = :public_key.pem_decode(pem_string)
     with {:ok, pem_entry} <- validate_pem_length(pem_entries),
@@ -54,6 +89,14 @@ defmodule ExPublicKey do
     do: sort_key_tup(rsa_key)
   end
 
+  @doc """
+  Converts a PEM string into an `ExPublicKey.RSAPrivateKey` or an `ExPublicKey.RSAPublicKey` key.
+  Identical to `ExPublicKey.loads/2`, except that loads! raises an ExCrypto.Error when an exception occurs.
+
+  ## Example
+      key = ExPublicKey.loads!(pem_string)
+
+  """
   def loads!(pem_string, passphrase \\ nil) do
     case loads(pem_string, passphrase) do
       {:ok, key} ->
@@ -197,6 +240,14 @@ defmodule ExPublicKey do
   def generate_key(bits), do: generate_key(:rsa, bits, 65537)
   def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
 
+  @doc """
+  Generate a new key
+
+  ## Example
+
+      {:ok, rsa_priv_key} = ExPublicKey.generate_key(2048)
+
+  """
   def generate_key(type, size_in_bits, public_exp) do
     {:ok, :public_key.generate_key({type, size_in_bits, public_exp}) |> ExPublicKey.RSAPrivateKey.from_sequence }
   catch
@@ -204,10 +255,26 @@ defmodule ExPublicKey do
       ExPublicKey.normalize_error(kind, error)
   end
 
+  @doc """
+  Extract the public part of a private string and return the results as a ExPublicKey.RSAPublicKey struct.
+
+  ## Example
+
+      {:ok, rsa_pub_key} = ExPublicKey.public_key_from_private_key(rsa_priv_key)
+
+  """
   def public_key_from_private_key(private_key = %ExPublicKey.RSAPrivateKey{}) do
     {:ok, ExPublicKey.RSAPublicKey.from_sequence({:RSAPublicKey, private_key.public_modulus, private_key.public_exponent})}
   end
 
+  @doc """
+  Encode a key into a PEM string.
+  To decode, use `ExPublicKey.loads/1`
+
+  ## Example
+      {:ok, pem_string} = ExPublicKey.pem_encode(key)
+
+  """
   def pem_encode(key = %ExPublicKey.RSAPrivateKey{}) do
     with {:ok, key_sequence} <- ExPublicKey.RSAPrivateKey.as_sequence(key),
       do: pem_entry_encode(key_sequence, :RSAPrivateKey)
