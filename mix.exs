@@ -5,7 +5,7 @@ defmodule ExCrypto.Mixfile do
     [app: :ex_crypto,
      version: "0.6.0",
      name: "ExCrypto",
-     elixir: ">= 1.3.0",
+     elixir: ">= 1.4.5",
      description: description(),
      package: package(),
      deps: deps(),
