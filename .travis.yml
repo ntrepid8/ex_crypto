@@ -2,5 +2,6 @@ language: elixir
 elixir:
   - 1.4.5
 otp_release:
+  - 18.2.1
   - 20.1
 script: mix test --trace
