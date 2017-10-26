@@ -236,9 +236,11 @@ defmodule ExPublicKey do
       do: decrypt_public_1([cipher_bytes, rsa_pub_key_seq])
   end
 
-  def generate_key, do: generate_key(:rsa, 2048, 65537)
-  def generate_key(bits), do: generate_key(:rsa, bits, 65537)
-  def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
+  def generate_key, do: generate_key(:rsa, 2048, 65537, otp_has_rsa_gen_support())
+  def generate_key(bits), do: generate_key(:rsa, bits, 65537, otp_has_rsa_gen_support())
+  def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp, otp_has_rsa_gen_support())
+  def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp, otp_has_rsa_gen_support())
+  def generate_key(:rsa, bits, public_exp, false), do: generate_rsa_openssl_fallback(bits)
 
   @doc """
   Generate a new key
@@ -248,11 +250,8 @@ defmodule ExPublicKey do
       {:ok, rsa_priv_key} = ExPublicKey.generate_key(2048)
 
   """
-  def generate_key(type, size_in_bits, public_exp) do
-    case otp_has_rsa_gen_support do
-      true -> {:ok, :public_key.generate_key({type, size_in_bits, public_exp}) |> ExPublicKey.RSAPrivateKey.from_sequence }
-      false -> generate_rsa_openssl_fallback(size_in_bits)
-    end
+  def generate_key(type, size_in_bits, public_exp, otp_has_rsa_gen_support) do
+    {:ok, :public_key.generate_key({type, size_in_bits, public_exp}) |> ExPublicKey.RSAPrivateKey.from_sequence }
   catch
     kind, error ->
       ExPublicKey.normalize_error(kind, error)
