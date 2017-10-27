@@ -1,5 +1,15 @@
 # Change Log
 
+## v0.7.0
+- Enhancements
+    - Add generate_key and pem_encode wrappers
+    - Add support for OTP 20
+    - Update Elixir requirement to 1.4.2
+    - Add documentation & examples
+    - Update Travis-CI to test OTP 18 & OTP 20
+- Contributors (thanks!)
+    - [barttenbrinke](https://github.com/barttenbrinke)
+
 ## v0.6.0
 - Enhancements
     - add support for RSA keys with passwords
