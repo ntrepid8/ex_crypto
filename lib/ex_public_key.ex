@@ -314,10 +314,10 @@ defmodule ExPublicKey do
   end
 
   defp otp_has_rsa_gen_support do
-    case (to_string(Application.spec(:public_key, :vsn)) |> Float.parse) do
-      :error -> false
-      {version, _remainder} -> version >= 1.5
-    end
+    Application.spec(:public_key, :vsn)
+    |> Kernel.to_string
+    # 1.4.1 corresponds with OTP 20.0, which included crypto 4.0 that added the rsa public key generation. public_key the get an interface, too.
+    |> Version.match?(">= 1.4.1")
   end
 
   defp generate_rsa_openssl_fallback(bits) do
