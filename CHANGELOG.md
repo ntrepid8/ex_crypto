@@ -1,5 +1,13 @@
 # Change Log
 
+## v0.7.1
+- Fixes
+    - fix `generate_key` compatibility with OTP 20
+    - fix README examples compatibility with Elixir v1.5
+- Contributors (thanks!)
+    - [Narnach](https://github.com/Narnach)
+    - [denispeplin](https://github.com/denispeplin)
+
 ## v0.7.0
 - Enhancements
     - Add generate_key and pem_encode wrappers

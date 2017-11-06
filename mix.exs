@@ -3,7 +3,7 @@ defmodule ExCrypto.Mixfile do
 
   def project do
     [app: :ex_crypto,
-     version: "0.7.0",
+     version: "0.7.1",
      name: "ExCrypto",
      elixir: ">= 1.4.2",
      description: description(),
