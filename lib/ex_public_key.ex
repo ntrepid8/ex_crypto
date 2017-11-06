@@ -7,6 +7,9 @@ defmodule ExPublicKey do
   Mostly wrappers Erlang' `:public_key` module, to help simplify using public/private key encryption in Elixir.
   """
 
+  # Erlang public_key v1.4.1 corresponds to Erlang/OTP 20.0
+  @otp_20_public_key_version [1, 4, 1]
+
   defmacro __using__(_) do
     quote do
       import ExPublicKey
@@ -241,8 +244,16 @@ defmodule ExPublicKey do
   def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
   def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
   def generate_key(:rsa, bits, public_exp), do: generate_key(:rsa, bits, public_exp, otp_has_rsa_gen_support())
-  def generate_key(:rsa, bits, public_exp, false), do: generate_rsa_openssl_fallback(bits) # Fallback support for OTP 18 & 19.
-  def generate_key(:rsa, bits, public_exp, true), do: {:ok, :public_key.generate_key({:rsa, bits, public_exp}) |> ExPublicKey.RSAPrivateKey.from_sequence }
+  def generate_key(:rsa, bits, public_exp, false) do
+    # Fallback support for OTP 18 & 19.
+    generate_rsa_openssl_fallback(bits)
+  end
+  def generate_key(:rsa, bits, public_exp, true) do
+    new_rsa_key =
+      :public_key.generate_key({:rsa, bits, public_exp})
+      |> ExPublicKey.RSAPrivateKey.from_sequence()
+    {:ok, new_rsa_key}
+  end
 
   @doc """
   Generate a new key.
@@ -314,13 +325,19 @@ defmodule ExPublicKey do
   end
 
   # Erlang public_key v1.4.1 corresponds to Erlang/OTP 20.0
-  defp otp_has_rsa_gen_support do
-    integer_list_version = Application.spec(:public_key, :vsn)
-    |> Kernel.to_string
+  defp otp_has_rsa_gen_support() do
+    Application.spec(:public_key, :vsn)
+    |> Kernel.to_string()
     |> String.split(".")
-    |> Enum.map(&Integer.parse/1)
+    |> Enum.map(fn(i) ->
+      {i_int, _} = Integer.parse(i)
+      i_int
+    end)
+    |> otp_has_rsa_gen_support_z()
+  end
 
-    integer_list_version >= [1, 4, 1]
+  defp otp_has_rsa_gen_support_z(version_int_list) do
+    version_int_list >= @otp_20_public_key_version
   end
 
   defp generate_rsa_openssl_fallback(bits) do
