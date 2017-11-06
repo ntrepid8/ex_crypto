@@ -44,7 +44,7 @@ msg = %{"name_first"=>"Chuck","name_last"=>"Norris"}
 msg_serialized = Poison.encode!(msg)
 
 # generate time-stamp
-ts = Date.now |> Date.to_secs
+ts = DateTime.utc_now |> DateTime.to_unix
 
 # add a time-stamp
 ts_msg_serialized = "#{ts}|#{msg_serialized}"
