@@ -28,7 +28,7 @@ defmodule ExPublicKey.RSAPrivateKey do
 
   def from_sequence(rsa_key_seq) do
     %ExPublicKey.RSAPrivateKey{} |> struct(
-      version: elem(rsa_key_seq, 1),
+      version: maybe_convert_version_to_atom(elem(rsa_key_seq, 1)),
       public_modulus: elem(rsa_key_seq, 2),
       public_exponent: elem(rsa_key_seq, 3),
       private_exponent: elem(rsa_key_seq, 4),
@@ -61,5 +61,11 @@ defmodule ExPublicKey.RSAPrivateKey do
         {:error, "invalid ExPublicKey.RSAPrivateKey: #{inspect rsa_private_key}"}
     end
   end
+
+  # Generating a RSA key on OTP 20.0 results in a RSAPrivateKey with version 0, which is the internal number that matches to :"two-prime".
+  # Parsing this structure to PEM and then converting it back will yield a version not of 0, but of :"two-prime".
+  # This conversion ensures it is always the symbol.
+  defp maybe_convert_version_to_atom(0), do: :"two-prime"
+  defp maybe_convert_version_to_atom(version), do: version
 
 end

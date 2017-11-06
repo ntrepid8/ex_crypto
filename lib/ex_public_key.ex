@@ -313,16 +313,18 @@ defmodule ExPublicKey do
     Base.encode64(payload_bytes)
   end
 
+  # Erlang public_key v1.4.1 corresponds to Erlang/OTP 20.0
   defp otp_has_rsa_gen_support do
-    case (to_string(Application.spec(:public_key, :vsn)) |> Float.parse) do
-      :error -> false
-      {version, _remainder} -> version >= 1.5
-    end
+    integer_list_version = Application.spec(:public_key, :vsn)
+    |> Kernel.to_string
+    |> String.split(".")
+    |> Enum.map(&Integer.parse/1)
+
+    integer_list_version >= [1, 4, 1]
   end
 
   defp generate_rsa_openssl_fallback(bits) do
     {pem_entry, _exit_code} = System.cmd("openssl", ["genrsa", to_string(bits)])
     loads(pem_entry)
   end
-
 end
