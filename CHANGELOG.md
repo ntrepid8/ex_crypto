@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.8.0
+- Enhancements
+    - remove warnings from Elixir 1.6.1 and Erlang/OTP 20
+    - update code style and formatting via Elixir 1.6.1 formatter
+- Contributors (thanks!)
+    - [quatermain](https://github.com/quatermain)
+
 ## v0.7.1
 - Fixes
     - fix `generate_key` compatibility with OTP 20
