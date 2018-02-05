@@ -37,7 +37,7 @@ defmodule ExPublicKey.RSAPrivateKey do
       exponent_one: elem(rsa_key_seq, 7),
       exponent_two: elem(rsa_key_seq, 8),
       ctr_coefficient: elem(rsa_key_seq, 9),
-      other_prime_infos: elem(rsa_key_seq, 10),
+      other_prime_infos: elem(rsa_key_seq, 10)
     )
   end
 
@@ -55,7 +55,7 @@ defmodule ExPublicKey.RSAPrivateKey do
           Map.get(rsa_private_key, :exponent_one),
           Map.get(rsa_private_key, :exponent_two),
           Map.get(rsa_private_key, :ctr_coefficient),
-          Map.get(rsa_private_key, :other_prime_infos),
+          Map.get(rsa_private_key, :other_prime_infos)
         }}
       _ ->
         {:error, "invalid ExPublicKey.RSAPrivateKey: #{inspect rsa_private_key}"}

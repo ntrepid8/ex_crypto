@@ -109,7 +109,7 @@ defmodule ExPublicKey do
     end
   end
 
-  defp load_pem_entry(pem_entry, passphrase \\ nil) do
+  defp load_pem_entry(pem_entry, passphrase) do
     cond do
       is_binary(passphrase) ->
         load_pem_entry(pem_entry, String.to_charlist(passphrase))
@@ -242,19 +242,7 @@ defmodule ExPublicKey do
   def generate_key, do: generate_key(:rsa, 2048, 65537)
   def generate_key(bits), do: generate_key(:rsa, bits, 65537)
   def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
-  def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
   def generate_key(:rsa, bits, public_exp), do: generate_key(:rsa, bits, public_exp, otp_has_rsa_gen_support())
-  def generate_key(:rsa, bits, public_exp, false) do
-    # Fallback support for OTP 18 & 19.
-    generate_rsa_openssl_fallback(bits)
-  end
-  def generate_key(:rsa, bits, public_exp, true) do
-    new_rsa_key =
-      :public_key.generate_key({:rsa, bits, public_exp})
-      |> ExPublicKey.RSAPrivateKey.from_sequence()
-    {:ok, new_rsa_key}
-  end
-
   @doc """
   Generate a new key.
   Note: To ensure Backwards compatibility when generating rsa keys on OTP < 20, we fall back to openssl via System.cmd.
@@ -269,6 +257,16 @@ defmodule ExPublicKey do
   catch
     kind, error ->
       ExPublicKey.normalize_error(kind, error)
+  end
+  def generate_key(:rsa, bits, _public_exp, false) do
+    # Fallback support for OTP 18 & 19.
+    generate_rsa_openssl_fallback(bits)
+  end
+  def generate_key(:rsa, bits, public_exp, true) do
+    new_rsa_key =
+      :public_key.generate_key({:rsa, bits, public_exp})
+      |> ExPublicKey.RSAPrivateKey.from_sequence()
+    {:ok, new_rsa_key}
   end
 
   @doc """

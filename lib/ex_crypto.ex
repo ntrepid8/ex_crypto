@@ -99,7 +99,7 @@ defmodule ExCrypto do
   """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
-    :crypto.rand_uniform(low, high)
+    low + :rand.uniform(high - low + 1) - 1
   end
 
   @doc """
@@ -277,27 +277,6 @@ defmodule ExCrypto do
     kind, error -> normalize_error(kind, error, {key, initialization_vector})
   end
 
-  defp _encrypt(key, initialization_vector, encryption_payload, algorithm) do
-    case :crypto.block_encrypt(algorithm, key, initialization_vector, encryption_payload) do
-      {cipher_text, cipher_tag} ->
-        {authentication_data, _clear_text} = encryption_payload
-        {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
-      <<cipher_text::binary>> ->
-        {:ok, {initialization_vector, cipher_text }}
-      x -> {:error, x}
-    end
-  end
-
-  def pad(data, block_size) do
-    to_add = block_size - rem(byte_size(data), block_size)
-    data <> to_string(:string.chars(to_add, to_add))
-  end
-
-  def unpad(data) do
-    to_remove = :binary.last(data)
-    :binary.part(data, 0, byte_size(data) - to_remove)
-  end
-
   @doc """
   Same as `encrypt/4` except the `initialization_vector` is automatically generated.
 
@@ -321,6 +300,27 @@ defmodule ExCrypto do
   def encrypt(key, authentication_data, clear_text) do
     {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
     _encrypt(key, initialization_vector, {authentication_data, clear_text}, :aes_gcm)
+  end
+
+  defp _encrypt(key, initialization_vector, encryption_payload, algorithm) do
+    case :crypto.block_encrypt(algorithm, key, initialization_vector, encryption_payload) do
+      {cipher_text, cipher_tag} ->
+        {authentication_data, _clear_text} = encryption_payload
+        {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
+      <<cipher_text::binary>> ->
+        {:ok, {initialization_vector, cipher_text }}
+      x -> {:error, x}
+    end
+  end
+
+  def pad(data, block_size) do
+    to_add = block_size - rem(byte_size(data), block_size)
+    data <> to_string(:string.chars(to_add, to_add))
+  end
+
+  def unpad(data) do
+    to_remove = :binary.last(data)
+    :binary.part(data, 0, byte_size(data) - to_remove)
   end
 
   @doc """
