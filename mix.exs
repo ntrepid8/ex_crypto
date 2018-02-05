@@ -2,23 +2,26 @@ defmodule ExCrypto.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :ex_crypto,
-     version: "0.7.1",
-     name: "ExCrypto",
-     elixir: ">= 1.4.2",
-     description: description(),
-     package: package(),
-     deps: deps(),
-     docs: [extras: ["README.md"]]
-   ]
+    [
+      app: :ex_crypto,
+      version: "0.7.1",
+      name: "ExCrypto",
+      elixir: ">= 1.4.2",
+      description: description(),
+      package: package(),
+      deps: deps(),
+      docs: [extras: ["README.md"]]
+    ]
   end
 
   def application do
-    [applications: applications(Mix.env)]
+    [applications: applications(Mix.env())]
   end
+
   defp applications(:test) do
     applications(:prod)
   end
+
   defp applications(_) do
     [:logger, :crypto, :public_key]
   end
@@ -42,7 +45,10 @@ defmodule ExCrypto.Mixfile do
       files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG*"],
       maintainers: ["Josh Austin"],
       licenses: ["MIT"],
-      links: %{"Github" => "https://github.com/ntrepid8/ex_crypto",
-               "Docs" => "https://hexdocs.pm/ex_crypto/readme.html"}]
+      links: %{
+        "Github" => "https://github.com/ntrepid8/ex_crypto",
+        "Docs" => "https://hexdocs.pm/ex_crypto/readme.html"
+      }
+    ]
   end
 end

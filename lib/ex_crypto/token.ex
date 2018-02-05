@@ -38,14 +38,15 @@ defmodule ExCrypto.Token do
   require Logger
 
   # type specs
-  @type option :: {:divider, String.t} |
-                  {:date_time, {{integer, integer, integer}, {integer, integer, integer}}}
+  @type option ::
+          {:divider, String.t()}
+          | {:date_time, {{integer, integer, integer}, {integer, integer, integer}}}
   @type options :: [option]
   @type token :: binary
   @type payload :: binary
 
   @epoch :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
-  @fifteen_min_in_seconds 15*60
+  @fifteen_min_in_seconds 15 * 60
 
   @doc """
   Generate a signed token that carries of timestamp of when it was signed.
@@ -64,10 +65,12 @@ defmodule ExCrypto.Token do
     sig_dt = Keyword.get(opts, :date_time, :calendar.universal_time())
     sig_ts = dt_to_ts(sig_dt)
     {:ok, iv} = ExCrypto.rand_bytes(16)
+
     case HMAC.hmac([iv, "#{sig_ts}", payload], secret) do
       {:ok, mac} ->
-          encoded_token = encode_token([iv, payload, sig_ts, mac])
+        encoded_token = encode_token([iv, payload, sig_ts, mac])
         {:ok, encoded_token}
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -106,11 +109,11 @@ defmodule ExCrypto.Token do
     sig_ts_challenge = dt_to_ts(sig_dt_challenge)
 
     with {:ok, [iv, payload, sig_ts_raw, mac]} <- decode_token(token),
-         {:ok, sig_ts} <- validate_sig_ts(sig_ts_raw, ttl, sig_ts_challenge)
-    do
+         {:ok, sig_ts} <- validate_sig_ts(sig_ts_raw, ttl, sig_ts_challenge) do
       case HMAC.verify_hmac([iv, "#{sig_ts}", payload], secret, mac) do
         {:ok, true} ->
           {:ok, payload}
+
         _ ->
           Logger.debug("HMAC failed to validate")
           {:error, :invalid_token}
@@ -169,7 +172,7 @@ defmodule ExCrypto.Token do
     # first verify the token to ensure it's good to start with
     with {:ok, payload} <- verify(token, secret, ttl, opts),
          {:ok, update_token} <- create(payload, secret, opts),
-      do: {:ok, {update_token, payload}}
+         do: {:ok, {update_token, payload}}
   end
 
   @doc """
@@ -191,6 +194,7 @@ defmodule ExCrypto.Token do
     case token do
       <<_mac::bits-size(256), _iv::bits-size(128), _sig_ts::integer-size(64), _payload::binary>> ->
         true
+
       _other ->
         false
     end
@@ -207,15 +211,19 @@ defmodule ExCrypto.Token do
     case Base.url_decode64(encoded_token) do
       {:ok, bin_token} ->
         decode_token_0(bin_token)
+
       _ ->
         Logger.debug("token was not encoded with valid URL safe base64 encoding")
         {:error, :invalid_token}
     end
   end
 
-  defp decode_token_0(<<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>>) do
+  defp decode_token_0(
+         <<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>>
+       ) do
     {:ok, [iv, payload, sig_ts, mac]}
   end
+
   defp decode_token_0(_invalid_token) do
     Logger.debug("token does not have the correct binary structure")
     {:error, :invalid_token}
@@ -224,20 +232,19 @@ defmodule ExCrypto.Token do
   defp validate_sig_ts(sig_ts, ttl, now_ts) do
     cond do
       # too old
-      (sig_ts + ttl) < now_ts ->
+      sig_ts + ttl < now_ts ->
         Logger.debug("timestamp #{sig_ts} with ttl #{ttl} is too old")
         {:error, :invalid_token}
 
       # in future
-      (now_ts + @fifteen_min_in_seconds) < sig_ts ->
+      now_ts + @fifteen_min_in_seconds < sig_ts ->
         Logger.debug("timestamp #{sig_ts} with ttl #{ttl} is in the future")
         {:error, :invalid_token}
 
       # valid
       ## signature timestamp plus TTL is in the future (not expired)
-      (sig_ts + ttl) > now_ts
       ## signature timestamp alone is not more than 15 minutes in the future (sanity)
-      and sig_ts < (now_ts + @fifteen_min_in_seconds) ->
+      sig_ts + ttl > now_ts and sig_ts < now_ts + @fifteen_min_in_seconds ->
         {:ok, sig_ts}
 
       # signature timestamp is outside the valid range

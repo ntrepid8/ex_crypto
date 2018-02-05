@@ -1,5 +1,4 @@
 defmodule ExCrypto.HMAC do
-
   def hmac(data, key) do
     hmac(data, key, type: :sha256)
   end
@@ -11,7 +10,7 @@ defmodule ExCrypto.HMAC do
     end
   end
 
-  def hmac(data, key, [type: :sha256]) do
+  def hmac(data, key, type: :sha256) do
     try do
       {:ok, :crypto.hmac(:sha256, key, data)}
     rescue
@@ -23,14 +22,16 @@ defmodule ExCrypto.HMAC do
     verify_hmac(data, key, other_mac, type: :sha256)
   end
 
-  def verify_hmac(data, key, other_mac, [type: :sha256]) do
+  def verify_hmac(data, key, other_mac, type: :sha256) do
     case hmac(data, key, type: :sha256) do
-      {:ok, my_mac} -> case my_mac === other_mac do
-        true -> {:ok, true}
-        false -> {:ok, false}
-      end
-      {:error, reason} -> {:error, reason}
+      {:ok, my_mac} ->
+        case my_mac === other_mac do
+          true -> {:ok, true}
+          false -> {:ok, false}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
-
 end

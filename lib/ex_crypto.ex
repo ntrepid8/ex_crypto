@@ -20,18 +20,24 @@ defmodule ExCrypto do
 
   defp normalize_error(kind, error, key_and_iv \\ nil) do
     key_error = test_key_and_iv_bitlength(key_and_iv)
+
     cond do
       key_error ->
         key_error
+
       %{message: message} = Exception.normalize(kind, error) ->
         {:error, message}
+
       x = Exception.normalize(kind, error) ->
-        {kind, x, System.stacktrace}
+        {kind, x, System.stacktrace()}
     end
   end
 
   defp test_key_and_iv_bitlength(nil), do: nil
-  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length, do: {:error, @bitlength_error}
+
+  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length,
+    do: {:error, @bitlength_error}
+
   defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 128) == 0, do: nil
   defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 192) == 0, do: nil
   defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 256) == 0, do: nil
@@ -56,17 +62,19 @@ defmodule ExCrypto do
       iex> assert(String.length(rand_string) == 44)
       true
   """
-  @spec rand_chars(integer) :: String.t
+  @spec rand_chars(integer) :: String.t()
   def rand_chars(num_chars) do
     block_bytes = 3
     block_chars = 4
     block_count = div(num_chars, block_chars)
     block_partial = rem(num_chars, block_chars)
+
     block_count =
       case block_partial > 0 do
         true -> block_count + 1
         false -> block_count
       end
+
     rand_string = Base.url_encode64(:crypto.strong_rand_bytes(block_count * block_bytes))
     String.slice(rand_string, 0, num_chars)
   end
@@ -212,13 +220,13 @@ defmodule ExCrypto do
       true
 
   """
-  @spec encrypt(binary, binary, binary, binary) :: {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
+  @spec encrypt(binary, binary, binary, binary) ::
+          {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
   def encrypt(key, authentication_data, initialization_vector, clear_text) do
     _encrypt(key, initialization_vector, {authentication_data, clear_text}, :aes_gcm)
   catch
     kind, error -> normalize_error(kind, error)
   end
-
 
   @doc """
   Encrypt a `binary` with AES in CBC mode.
@@ -240,14 +248,14 @@ defmodule ExCrypto do
   """
   @spec encrypt(binary, binary) :: {:ok, {binary, binary}} | {:error, binary}
   def encrypt(key, clear_text) do
-    {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
+    # new 128 bit random initialization_vector
+    {:ok, initialization_vector} = rand_bytes(16)
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
   catch
     kind, error ->
       {:ok, initialization_vector} = rand_bytes(16)
       normalize_error(kind, error, {key, initialization_vector})
   end
-
 
   @doc """
   Encrypt a `binary` with AES in CBC mode providing explicit IV via map.
@@ -268,9 +276,10 @@ defmodule ExCrypto do
       true
 
   """
-  @spec encrypt(binary, binary, %{initialization_vector: binary}) :: {:ok, {binary, {binary, binary, binary}}} |
-                                                                     {:ok, {binary, binary}} |
-                                                                     {:error, any}
+  @spec encrypt(binary, binary, %{initialization_vector: binary}) ::
+          {:ok, {binary, {binary, binary, binary}}}
+          | {:ok, {binary, binary}}
+          | {:error, any}
   def encrypt(key, clear_text, %{initialization_vector: initialization_vector}) do
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
   catch
@@ -296,9 +305,11 @@ defmodule ExCrypto do
       true
 
   """
-  @spec encrypt(binary, binary, binary) :: {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
+  @spec encrypt(binary, binary, binary) ::
+          {:ok, {binary, {binary, binary, binary}}} | {:error, binary}
   def encrypt(key, authentication_data, clear_text) do
-    {:ok, initialization_vector} = rand_bytes(16)  # new 128 bit random initialization_vector
+    # new 128 bit random initialization_vector
+    {:ok, initialization_vector} = rand_bytes(16)
     _encrypt(key, initialization_vector, {authentication_data, clear_text}, :aes_gcm)
   end
 
@@ -307,9 +318,12 @@ defmodule ExCrypto do
       {cipher_text, cipher_tag} ->
         {authentication_data, _clear_text} = encryption_payload
         {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
+
       <<cipher_text::binary>> ->
-        {:ok, {initialization_vector, cipher_text }}
-      x -> {:error, x}
+        {:ok, {initialization_vector, cipher_text}}
+
+      x ->
+        {:error, x}
     end
   end
 
@@ -345,7 +359,6 @@ defmodule ExCrypto do
   def decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag) do
     _decrypt(key, initialization_vector, {authentication_data, cipher_text, cipher_tag}, :aes_gcm)
   end
-
 
   @doc """
   Returns a clear-text string decrypted with AES256 in CBC mode.
@@ -427,7 +440,7 @@ defmodule ExCrypto do
     {:ok, decoded_parts} = Base.url_decode64(encoded_parts)
     decoded_length = byte_size(decoded_parts)
     iv = Kernel.binary_part(decoded_parts, 0, 16)
-    cipher_text = Kernel.binary_part(decoded_parts, 16, (decoded_length-32))
+    cipher_text = Kernel.binary_part(decoded_parts, 16, decoded_length - 32)
     cipher_tag = Kernel.binary_part(decoded_parts, decoded_length, -16)
     {:ok, {iv, cipher_text, cipher_tag}}
   end
@@ -436,5 +449,4 @@ defmodule ExCrypto do
   def universal_time(:unix) do
     :calendar.datetime_to_gregorian_seconds(:calendar.universal_time()) - @epoch
   end
-
 end
