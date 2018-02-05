@@ -3,8 +3,11 @@ defmodule ExEntropyTest do
 
   defp generate_repeat_list(accumulator, value, count) when is_list(accumulator) do
     case count do
-      c when c >= 0 -> generate_repeat_list(List.insert_at(accumulator, -1, value), value, count-1)
-      c when c < 0 -> accumulator
+      c when c >= 0 ->
+        generate_repeat_list(List.insert_at(accumulator, -1, value), value, count - 1)
+
+      c when c < 0 ->
+        accumulator
     end
   end
 
@@ -25,21 +28,22 @@ defmodule ExEntropyTest do
   end
 
   test "shannon_entropy with strong_rand_bytes and 2^10" do
-    rand_bytes = :crypto.strong_rand_bytes(1024*1000)
+    rand_bytes = :crypto.strong_rand_bytes(1024 * 1000)
     shannon_entropy = ExEntropy.shannon_entropy(rand_bytes, 10)
     assert(shannon_entropy > 0.99)
   end
 
   test "shannon_entropy with strong_rand_bytes and 2^16" do
-    rand_bytes = :crypto.strong_rand_bytes(1024*1000)
+    rand_bytes = :crypto.strong_rand_bytes(1024 * 1000)
     shannon_entropy = ExEntropy.shannon_entropy(rand_bytes, 16)
     assert(shannon_entropy > 0.99)
   end
 
   test "shannon_entropy with strong_rand_bytes and 2^20" do
-    rand_bytes = :crypto.strong_rand_bytes(1024*1000)
+    rand_bytes = :crypto.strong_rand_bytes(1024 * 1000)
     shannon_entropy = ExEntropy.shannon_entropy(rand_bytes, 20)
-    assert(shannon_entropy > 0.90)  # this is taxing on the entropy pool
+    # this is taxing on the entropy pool
+    assert(shannon_entropy > 0.90)
   end
 
   test "shannon_entropy with known low entropy bytes and 2^8" do
@@ -48,9 +52,11 @@ defmodule ExEntropyTest do
     {:ok, bin_val_1} = ExCrypto.rand_bytes(1)
 
     # use the two random numbers to generate a low entropy binary string
-    bytes_val_2 = Enum.join(generate_repeat_list(bin_val_0, 127)) 
-    <> Enum.join(generate_repeat_list(bin_val_1, 127))
-    assert(is_binary bytes_val_2)
+    bytes_val_2 =
+      Enum.join(generate_repeat_list(bin_val_0, 127)) <>
+        Enum.join(generate_repeat_list(bin_val_1, 127))
+
+    assert(is_binary(bytes_val_2))
     assert(byte_size(bytes_val_2) == 256)
 
     # measure the entropy in the low entropy string and assert it is low
@@ -67,9 +73,11 @@ defmodule ExEntropyTest do
     {:ok, bin_val_1} = ExCrypto.rand_bytes(1)
 
     # use the two random numbers to generate a low entropy binary string
-    bytes_val_2 = Enum.join(generate_repeat_list(bin_val_0, 127)) 
-    <> Enum.join(generate_repeat_list(bin_val_1, 127))
-    assert(is_binary bytes_val_2)
+    bytes_val_2 =
+      Enum.join(generate_repeat_list(bin_val_0, 127)) <>
+        Enum.join(generate_repeat_list(bin_val_1, 127))
+
+    assert(is_binary(bytes_val_2))
     assert(byte_size(bytes_val_2) == 256)
 
     # measure the entropy in the low entropy string and assert it is low

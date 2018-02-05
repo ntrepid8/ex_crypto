@@ -22,11 +22,11 @@ defmodule ExPublicKey do
     case Exception.normalize(kind, error) do
       %{message: message} ->
         {:error, message}
+
       x ->
-        {kind, x, System.stacktrace}
+        {kind, x, System.stacktrace()}
     end
   end
-
 
   @doc """
   Loads PEM string from the specified file path and returns a `ExPublicKey.RSAPrivateKey` or a `ExPublicKey.RSAPublicKey` key.
@@ -42,6 +42,7 @@ defmodule ExPublicKey do
     case File.read(file_path) do
       {:ok, key_string} ->
         ExPublicKey.loads(key_string, passphrase)
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -62,6 +63,7 @@ defmodule ExPublicKey do
     case load(file_path, passphrase) do
       {:ok, key} ->
         key
+
       {:error, reason} ->
         raise ExCrypto.Error, reason: reason
     end
@@ -87,9 +89,10 @@ defmodule ExPublicKey do
   """
   def loads(pem_string, passphrase \\ nil) do
     pem_entries = :public_key.pem_decode(pem_string)
+
     with {:ok, pem_entry} <- validate_pem_length(pem_entries),
          {:ok, rsa_key} <- load_pem_entry(pem_entry, passphrase),
-    do: sort_key_tup(rsa_key)
+         do: sort_key_tup(rsa_key)
   end
 
   @doc """
@@ -104,12 +107,13 @@ defmodule ExPublicKey do
     case loads(pem_string, passphrase) do
       {:ok, key} ->
         key
+
       {:error, reason} ->
         raise ExCrypto.Error, reason: reason
     end
   end
 
-  defp load_pem_entry(pem_entry, passphrase \\ nil) do
+  defp load_pem_entry(pem_entry, passphrase) do
     cond do
       is_binary(passphrase) ->
         load_pem_entry(pem_entry, String.to_charlist(passphrase))
@@ -129,10 +133,15 @@ defmodule ExPublicKey do
     case elem(key_tup, 0) do
       :RSAPrivateKey ->
         {:ok, ExPublicKey.RSAPrivateKey.from_sequence(key_tup)}
+
       :RSAPublicKey ->
         {:ok, ExPublicKey.RSAPublicKey.from_sequence(key_tup)}
+
       x ->
-        {:error, "invalid argument, expected one of[ExPublicKey.RSAPublicKey, ExPublicKey.RSAPrivateKey], found: #{x}"}
+        {:error,
+         "invalid argument, expected one of[ExPublicKey.RSAPublicKey, ExPublicKey.RSAPrivateKey], found: #{
+           x
+         }"}
     end
   end
 
@@ -145,7 +154,7 @@ defmodule ExPublicKey do
 
   def sign(msg, sha, private_key) do
     with {:ok, priv_key_sequence} <- ExPublicKey.RSAPrivateKey.as_sequence(private_key),
-      do: sign_0(priv_key_sequence, msg, sha)
+         do: sign_0(priv_key_sequence, msg, sha)
   end
 
   def sign(msg, private_key) do
@@ -160,7 +169,7 @@ defmodule ExPublicKey do
 
   def verify(msg, sha, signature, public_key) do
     with {:ok, pub_key_sequence} <- ExPublicKey.RSAPublicKey.as_sequence(public_key),
-      do: verify_0(pub_key_sequence, msg, sha, signature)
+         do: verify_0(pub_key_sequence, msg, sha, signature)
   end
 
   def verify(msg, signature, public_key) do
@@ -176,10 +185,11 @@ defmodule ExPublicKey do
 
   def encrypt_private(clear_text, private_key, opts \\ []) do
     url_safe = Keyword.get(opts, :url_safe, true)
+
     with {:ok, priv_key_sequence} <- ExPublicKey.RSAPrivateKey.as_sequence(private_key),
          {:ok, cipher_bytes} <- encrypt_private_0(priv_key_sequence, clear_text),
-          encoded_cipher_text = encode(cipher_bytes, url_safe),
-      do: {:ok, encoded_cipher_text}
+         encoded_cipher_text = encode(cipher_bytes, url_safe),
+         do: {:ok, encoded_cipher_text}
   end
 
   defp encrypt_public_0(rsa_pub_key_seq, clear_text) do
@@ -191,10 +201,11 @@ defmodule ExPublicKey do
 
   def encrypt_public(clear_text, public_key, opts \\ []) do
     url_safe = Keyword.get(opts, :url_safe, true)
+
     with {:ok, pub_key_sequence} <- ExPublicKey.RSAPublicKey.as_sequence(public_key),
          {:ok, cipher_bytes} <- encrypt_public_0(pub_key_sequence, clear_text),
-          encoded_cipher_text = encode(cipher_bytes, url_safe),
-      do: {:ok, encoded_cipher_text}
+         encoded_cipher_text = encode(cipher_bytes, url_safe),
+         do: {:ok, encoded_cipher_text}
   end
 
   defp decrypt_private_0(cipher_bytes, private_key) do
@@ -213,9 +224,11 @@ defmodule ExPublicKey do
 
   def decrypt_private(cipher_text, private_key, opts \\ []) do
     url_safe = Keyword.get(opts, :url_safe, true)
+
     with {:ok, decoded_cipher_text} <- decode(cipher_text, url_safe),
-         {:ok, [cipher_bytes, rsa_priv_key_seq]} <- decrypt_private_0(decoded_cipher_text, private_key),
-      do: decrypt_private_1([cipher_bytes, rsa_priv_key_seq])
+         {:ok, [cipher_bytes, rsa_priv_key_seq]} <-
+           decrypt_private_0(decoded_cipher_text, private_key),
+         do: decrypt_private_1([cipher_bytes, rsa_priv_key_seq])
   end
 
   defp decrypt_public_0(cipher_bytes, public_key) do
@@ -234,26 +247,19 @@ defmodule ExPublicKey do
 
   def decrypt_public(cipher_text, public_key, opts \\ []) do
     url_safe = Keyword.get(opts, :url_safe, true)
+
     with {:ok, decoded_cipher_text} <- decode(cipher_text, url_safe),
-         {:ok, [cipher_bytes, rsa_pub_key_seq]} <- decrypt_public_0(decoded_cipher_text, public_key),
-      do: decrypt_public_1([cipher_bytes, rsa_pub_key_seq])
+         {:ok, [cipher_bytes, rsa_pub_key_seq]} <-
+           decrypt_public_0(decoded_cipher_text, public_key),
+         do: decrypt_public_1([cipher_bytes, rsa_pub_key_seq])
   end
 
   def generate_key, do: generate_key(:rsa, 2048, 65537)
   def generate_key(bits), do: generate_key(:rsa, bits, 65537)
   def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
-  def generate_key(bits, public_exp), do: generate_key(:rsa, bits, public_exp)
-  def generate_key(:rsa, bits, public_exp), do: generate_key(:rsa, bits, public_exp, otp_has_rsa_gen_support())
-  def generate_key(:rsa, bits, public_exp, false) do
-    # Fallback support for OTP 18 & 19.
-    generate_rsa_openssl_fallback(bits)
-  end
-  def generate_key(:rsa, bits, public_exp, true) do
-    new_rsa_key =
-      :public_key.generate_key({:rsa, bits, public_exp})
-      |> ExPublicKey.RSAPrivateKey.from_sequence()
-    {:ok, new_rsa_key}
-  end
+
+  def generate_key(:rsa, bits, public_exp),
+    do: generate_key(:rsa, bits, public_exp, otp_has_rsa_gen_support())
 
   @doc """
   Generate a new key.
@@ -265,10 +271,23 @@ defmodule ExPublicKey do
 
   """
   def generate_key(type, bits, public_exp) do
-    {:ok, :public_key.generate_key({type, bits, public_exp}) }
+    {:ok, :public_key.generate_key({type, bits, public_exp})}
   catch
     kind, error ->
       ExPublicKey.normalize_error(kind, error)
+  end
+
+  def generate_key(:rsa, bits, _public_exp, false) do
+    # Fallback support for OTP 18 & 19.
+    generate_rsa_openssl_fallback(bits)
+  end
+
+  def generate_key(:rsa, bits, public_exp, true) do
+    new_rsa_key =
+      :public_key.generate_key({:rsa, bits, public_exp})
+      |> ExPublicKey.RSAPrivateKey.from_sequence()
+
+    {:ok, new_rsa_key}
   end
 
   @doc """
@@ -280,7 +299,10 @@ defmodule ExPublicKey do
 
   """
   def public_key_from_private_key(private_key = %ExPublicKey.RSAPrivateKey{}) do
-    {:ok, ExPublicKey.RSAPublicKey.from_sequence({:RSAPublicKey, private_key.public_modulus, private_key.public_exponent})}
+    {:ok,
+     ExPublicKey.RSAPublicKey.from_sequence(
+       {:RSAPublicKey, private_key.public_modulus, private_key.public_exponent}
+     )}
   end
 
   @doc """
@@ -293,12 +315,12 @@ defmodule ExPublicKey do
   """
   def pem_encode(key = %ExPublicKey.RSAPrivateKey{}) do
     with {:ok, key_sequence} <- ExPublicKey.RSAPrivateKey.as_sequence(key),
-      do: pem_entry_encode(key_sequence, :RSAPrivateKey)
+         do: pem_entry_encode(key_sequence, :RSAPrivateKey)
   end
 
   def pem_encode(key = %ExPublicKey.RSAPublicKey{}) do
     with {:ok, key_sequence} <- ExPublicKey.RSAPublicKey.as_sequence(key),
-      do: pem_entry_encode(key_sequence, :RSAPublicKey)
+         do: pem_entry_encode(key_sequence, :RSAPublicKey)
   end
 
   # Helpers
@@ -313,6 +335,7 @@ defmodule ExPublicKey do
   defp decode(encoded_payload, _url_safe = true) do
     Base.url_decode64(encoded_payload)
   end
+
   defp decode(encoded_payload, _url_safe = false) do
     Base.decode64(encoded_payload)
   end
@@ -320,6 +343,7 @@ defmodule ExPublicKey do
   defp encode(payload_bytes, _url_safe = true) do
     Base.url_encode64(payload_bytes)
   end
+
   defp encode(payload_bytes, _url_safe = false) do
     Base.encode64(payload_bytes)
   end
@@ -329,7 +353,7 @@ defmodule ExPublicKey do
     Application.spec(:public_key, :vsn)
     |> Kernel.to_string()
     |> String.split(".")
-    |> Enum.map(fn(i) ->
+    |> Enum.map(fn i ->
       {i_int, _} = Integer.parse(i)
       i_int
     end)
