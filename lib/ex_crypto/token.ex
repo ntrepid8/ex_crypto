@@ -21,7 +21,7 @@ defmodule ExCrypto.Token do
       iex> ttl = (15 * 60)  # 15 minute TTL (in seconds)
       iex> {:ok, verified_payload} = ExCrypto.Token.verify(token, secret, ttl)
       iex> decoded_verified_payload = Poison.decode!(verified_payload)
-      iex> decoded_verified_payload == payload
+      iex> assert(decoded_verified_payload == payload)
       iex> Map.get(decoded_verified_payload, "user_id")
       12345
 

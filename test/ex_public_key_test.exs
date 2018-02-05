@@ -3,8 +3,6 @@ defmodule ExPublicKeyTest do
   alias ExPublicKey.RSAPublicKey, as: RSAPublicKey
   alias ExPublicKey.RSAPrivateKey, as: RSAPrivateKey
 
-  @epoch :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
-
   setup do
     # generate a RSA key pair
     # generate a unique temp file name
@@ -55,7 +53,7 @@ defmodule ExPublicKeyTest do
     assert(rsa_pub_key.__struct__ == RSAPublicKey)
   end
 
-  test "converts RSA keys to PEM format and back", context do
+  test "converts RSA keys to PEM format and back", _context do
     {:ok, rsa_priv_key} = ExPublicKey.generate_key
     {:ok, priv_key_string} = ExPublicKey.pem_encode(rsa_priv_key)
 
@@ -94,7 +92,7 @@ defmodule ExPublicKeyTest do
     {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
     rand_chars = ExCrypto.rand_chars(16)
     plain_text = "This is a test message to encrypt, complete with some entropy (#{rand_chars})."
-    
+
     {:ok, cipher_text} = ExPublicKey.encrypt_public(plain_text, rsa_pub_key)
     assert(cipher_text != plain_text)
 
@@ -131,7 +129,7 @@ defmodule ExPublicKeyTest do
     assert(decrypted_plain_text == plain_text)
   end
 
-  test "RSA private_key encrypt and RSA public_key decrypt using generated keys", context do
+  test "RSA private_key encrypt and RSA public_key decrypt using generated keys", _context do
     {:ok, rsa_priv_key} = ExPublicKey.generate_key
     {:ok, rsa_pub_key} = ExPublicKey.public_key_from_private_key(rsa_priv_key)
     rand_chars = ExCrypto.rand_chars(16)
@@ -167,10 +165,10 @@ defmodule ExPublicKeyTest do
       {:error, reason} ->
         IO.inspect reason
         assert true, "the right error was provoked: #{reason}"
-      {:error, error, stack_trace} ->
+      {:error, error, _stack_trace} ->
         IO.inspect error
         assert false, "the wrong error was provoked: #{error.message}"
-      x ->
+      _x ->
         # IO.inspect x
         assert false, "something else happened"
     end

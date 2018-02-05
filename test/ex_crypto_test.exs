@@ -7,18 +7,18 @@ defmodule ExCryptoTest do
   end
 
   def run_rand_char_test() do
-    rand_char_count = :crypto.rand_uniform(1, 100)
+    rand_char_count = :rand.uniform(100)
     rand_string = ExCrypto.rand_chars(rand_char_count)
     assert(String.length(rand_string) == rand_char_count)
   end
 
   test "generate random characters" do
-    for n <- 1..100, do: run_rand_char_test()
+    for _n <- 1..100, do: run_rand_char_test()
   end
 
   test "generate random integers and test randomness" do
     set_size = 100000
-    random_ints = for n <- 1..set_size, do: ExCrypto.rand_int(1, 100)
+    random_ints = for _n <- 1..set_size, do: ExCrypto.rand_int(0, 100)
 
     # do cursory check for randomness, average should be very near 50
     average = Enum.sum(random_ints) / set_size
@@ -73,7 +73,7 @@ defmodule ExCryptoTest do
 
     # encrypt
     {:ok, {ad, payload}} = ExCrypto.encrypt(aes_128_key, a_data, iv, clear_text)
-    {c_iv, cipher_text, cipher_tag} = payload
+    {_c_iv, cipher_text, cipher_tag} = payload
     assert(clear_text != cipher_text)
 
     # decrypt
@@ -124,7 +124,7 @@ defmodule ExCryptoTest do
     a_data = "the auth and associated data"
 
     # encrypt
-    {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
+    {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, a_data, clear_text)
     {iv, cipher_text, cipher_tag} = payload
     assert(byte_size(iv) == 16)
     assert(byte_size(cipher_tag) == 16)

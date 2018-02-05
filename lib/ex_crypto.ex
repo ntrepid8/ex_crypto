@@ -204,8 +204,8 @@ defmodule ExCrypto do
       iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
       iex> {:ok, iv} = ExCrypto.rand_bytes(16)
-      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, iv, clear_text)
-      iex> {iv, cipher_text, cipher_tag} = payload
+      iex> {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, iv, clear_text)
+      iex> {_iv, cipher_text, cipher_tag} = payload
       iex> assert(is_bitstring(cipher_text))
       true
       iex> assert(bit_size(cipher_tag) == 128)
@@ -233,7 +233,7 @@ defmodule ExCrypto do
 
       iex> clear_text = "my-clear-text"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      iex> {:ok, {iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text)
+      iex> {:ok, {_iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text)
       iex> assert(is_bitstring(cipher_text))
       true
 
@@ -263,7 +263,7 @@ defmodule ExCrypto do
       iex> clear_text = "my-clear-text"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
       iex> {:ok, init_vec} = ExCrypto.rand_bytes(16)
-      iex> {:ok, {iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text, %{initialization_vector: init_vec})
+      iex> {:ok, {_iv, cipher_text}} = ExCrypto.encrypt(aes_256_key, clear_text, %{initialization_vector: init_vec})
       iex> assert(is_bitstring(cipher_text))
       true
 
@@ -288,8 +288,8 @@ defmodule ExCrypto do
       iex> clear_text = "my-clear-text"
       iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
-      iex> {init_vec, cipher_text, cipher_tag} = payload
+      iex> {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {_init_vec, cipher_text, cipher_tag} = payload
       iex> assert(is_bitstring(cipher_text))
       true
       iex> assert(bit_size(cipher_tag) == 128)
@@ -335,7 +335,7 @@ defmodule ExCrypto do
       iex> clear_text = "my-clear-text"
       iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      iex> {:ok, {ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
       iex> {init_vec, cipher_text, cipher_tag} = payload
       iex> {:ok, val} = ExCrypto.decrypt(aes_256_key, auth_data, init_vec, cipher_text, cipher_tag)
       iex> assert(val == clear_text)
@@ -392,7 +392,7 @@ defmodule ExCrypto do
       iex> clear_text = "my-clear-text"
       iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      iex> {:ok, {ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {:ok, {_ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
       iex> {:ok, encoded_payload} = ExCrypto.encode_payload(init_vec, cipher_text, cipher_tag)
       iex> assert(String.valid?(encoded_payload))
       true
@@ -410,7 +410,7 @@ defmodule ExCrypto do
       iex> clear_text = "my-clear-text"
       iex> auth_data = "my-auth-data"
       iex> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
-      iex> {:ok, {ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
+      iex> {:ok, {_ad, {init_vec, cipher_text, cipher_tag}}} = ExCrypto.encrypt(aes_256_key, auth_data, clear_text)
       iex> {:ok, encoded_payload} = ExCrypto.encode_payload(init_vec, cipher_text, cipher_tag)
       iex> assert(String.valid?(encoded_payload))
       true
