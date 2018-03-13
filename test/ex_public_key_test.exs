@@ -8,47 +8,83 @@ defmodule ExPublicKeyTest do
     # generate a unique temp file name
     rand_string = ExCrypto.rand_chars(4)
     rsa_private_key_path = "/tmp/test_ex_crypto_rsa_private_key_#{rand_string}.pem"
+    rsa_private_key_path_der = "/tmp/test_ex_crypto_rsa_private_key_#{rand_string}.der"
     rsa_public_key_path = "/tmp/test_ex_crypto_rsa_public_key_#{rand_string}.pem"
+    rsa_public_key_path_der = "/tmp/test_ex_crypto_rsa_public_key_#{rand_string}.der"
     rsa_secure_private_key_path = "/tmp/test_ex_crypto_rsa_secure_private_key_#{rand_string}.pem"
 
+    sys_cmd_opts = [stderr_to_stdout: true]
+
     # generate the RSA private key with openssl
-    System.cmd("openssl", ["genrsa", "-out", rsa_private_key_path, "2048"])
+    {_, 0} =
+      System.cmd("openssl", ["genrsa", "-out", rsa_private_key_path, "2048"], sys_cmd_opts)
 
     # export the RSA public key to a file with openssl
-    System.cmd("openssl", [
-      "rsa",
-      "-in",
-      rsa_private_key_path,
-      "-outform",
-      "PEM",
-      "-pubout",
-      "-out",
-      rsa_public_key_path
-    ])
+    {_, 0} =
+      System.cmd("openssl", [
+        "rsa",
+        "-in",
+        rsa_private_key_path,
+        "-outform",
+        "PEM",
+        "-pubout",
+        "-out",
+        rsa_public_key_path
+      ], sys_cmd_opts)
 
     # generate a passphrase protected RSA private key with openssl
-    System.cmd("openssl", [
-      "genrsa",
-      "-out",
-      rsa_secure_private_key_path,
-      "-passout",
-      "pass:#{rand_string}",
-      "2048"
-    ])
+    {_, 0} =
+      System.cmd("openssl", [
+        "genrsa",
+        "-out",
+        rsa_secure_private_key_path,
+        "-passout",
+        "pass:#{rand_string}",
+        "2048"
+      ], sys_cmd_opts)
+
+    # save DER encoded form
+    {_, 0} =
+      System.cmd("openssl", [
+        "rsa",
+        "-in",
+        rsa_private_key_path,
+        "-outform",
+        "DER",
+        "-out",
+        rsa_private_key_path_der],
+        sys_cmd_opts)
+
+    # save DER encoded form (pub)
+    {_, 0} =
+      System.cmd("openssl", [
+        "rsa",
+        "-in",
+        rsa_private_key_path,
+        "-pubout",
+        "-outform",
+        "DER",
+        "-out",
+        rsa_public_key_path_der],
+        sys_cmd_opts)
 
     on_exit(fn ->
       # cleanup: delete the temp keys
       File.rm!(rsa_private_key_path)
       File.rm!(rsa_public_key_path)
+      File.rm!(rsa_private_key_path_der)
+      File.rm!(rsa_public_key_path_der)
       File.rm!(rsa_secure_private_key_path)
     end)
 
     {:ok,
      [
        rsa_private_key_path: rsa_private_key_path,
+       rsa_private_key_path_der: rsa_private_key_path_der,
        rsa_public_key_path: rsa_public_key_path,
+       rsa_public_key_path_der: rsa_public_key_path_der,
        rsa_secure_private_key_path: rsa_secure_private_key_path,
-       passphrase: rand_string
+       passphrase: rand_string,
      ]}
   end
 
@@ -128,6 +164,105 @@ defmodule ExPublicKeyTest do
     {:ok, decrypted_plain_text} = ExPublicKey.decrypt_private(cipher_text, rsa_priv_key, opts)
     assert(decrypted_plain_text == plain_text)
   end
+
+  test "RSAPrivateKey encode_der", context do
+    # load openssl DER encoded file
+    rsa_private_key_der = File.read!(context.rsa_private_key_path_der)
+
+    {:ok, rsa_priv_key} = ExPublicKey.load(context.rsa_private_key_path)
+    {:ok, der_encoded} = RSAPrivateKey.encode_der(rsa_priv_key)
+
+    # compare our DER encoded value to the openssl DER encoded value
+    assert der_encoded == rsa_private_key_der
+  end
+
+  test "RSAPublicKey encode_der", context do
+    # load openssl DER encoded file
+    rsa_public_key_der = File.read!(context.rsa_public_key_path_der)
+
+    {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
+    {:ok, der_encoded} = RSAPublicKey.encode_der(rsa_pub_key)
+
+    # compare our DER encoded value to the openssl DER encoded value
+    assert der_encoded == rsa_public_key_der
+  end
+
+  # test "RSAPublicKey encode_der (old)", context do
+  #   rsa_public_key_der = File.read!(context.rsa_public_key_path_der)
+  #   rsa_public_key = File.read!(context.rsa_public_key_path)
+  #   IO.puts("\nrsa_public_key_der=#{inspect rsa_public_key_der} byte_size=#{byte_size rsa_public_key_der}")
+  #   pem_entries = :public_key.pem_decode(rsa_public_key)
+  #   IO.puts("\npem_entries=#{inspect pem_entries}")
+
+  #   key_sequence = :public_key.der_decode(:SubjectPublicKeyInfo, rsa_public_key_der)
+  #   IO.puts("\nkey_sequence=#{inspect key_sequence}")
+
+  #   # pkix_decode = :public_key.pkix_decode_cert(rsa_public_key_der, :plain)
+  #   # IO.puts("\npkix_decode=#{inspect pkix_decode}")
+
+
+  #   # pem_entry = :public_key.pem_entry_decode(key_sequence)
+  #   # IO.puts("\npem_entry=#{inspect pem_entry}")
+
+  #   {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
+  #   IO.puts("\nrsa_pub_key=#{inspect rsa_pub_key, pretty: true}")
+  #   {:ok, rsa_pub_key_der_encoded} = RSAPublicKey.encode_der(rsa_pub_key)
+  #   IO.puts("\rsa_pub_key_der_encoded=#{inspect rsa_pub_key_der_encoded} byte_size=#{byte_size rsa_pub_key_der_encoded}")
+  #   File.write!("#{context.rsa_public_key_path_der}.gen.der", rsa_pub_key_der_encoded)
+  #   # {:ok, rsa_pub_key_from_der} = RSAPublicKey.decode_der(rsa_pub_key_der_encoded)
+  #   # assert rsa_pub_key_from_der == rsa_pub_key
+  #   {:ok, rsa_pub_key_from_der} = RSAPublicKey.decode_der(rsa_public_key_der)
+  #   assert rsa_pub_key_from_der == rsa_pub_key
+  #   assert rsa_pub_key_der_encoded == rsa_public_key_der
+  # end
+
+  test "RSAPrivateKey get_fingerprint/2 (sha256)", context do
+    # compute sha256 fingerprint w/ openssl
+    {rsa_private_key_fingerprint_sha256, 0} =
+      System.cmd("openssl", ["sha256", context.rsa_private_key_path])
+
+    {:ok, rsa_priv_key} = ExPublicKey.load(context.rsa_private_key_path)
+    fingerprint = RSAPrivateKey.get_fingerprint(rsa_priv_key, format: :sha256)
+
+    # verify computed value matches openssl
+    rsa_private_key_fingerprint_sha256 =~ fingerprint
+  end
+
+  test "RSAPublicKey get_fingerprint/2 (sha256)", context do
+    # compute sha256 fingerprint w/ openssl
+    {rsa_public_key_fingerprint_sha256, 0} =
+      System.cmd("openssl", ["sha256", context.rsa_public_key_path_der])
+
+    {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
+    fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key, format: :sha256)
+
+    # verify computed value matches openssl
+    rsa_public_key_fingerprint_sha256 =~ fingerprint
+  end
+
+  test "RSAPublicKey get_fingerprint/2 (md5)", context do
+    # compute md5 fingerprint w/ openssl
+    {rsa_public_key_fingerprint_md5, 0} =
+      System.cmd("openssl", ["md5", context.rsa_public_key_path_der])
+
+    {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
+    fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key, format: :md5)
+
+    # verify computed value matches openssl
+    rsa_public_key_fingerprint_md5 =~ fingerprint
+  end
+
+  # test "RSA public_key compute fingerprint", context do
+  #   rsa_public_key_der = File.read!(context.rsa_public_key_path_der)
+  #   IO.puts("\nrsa_public_key_der=#{inspect rsa_public_key_der}")
+  #   {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
+  #   IO.puts("\nrsa_priv_key=#{inspect rsa_priv_key, pretty: true}")
+  #   {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
+  #   IO.puts("\nrsa_pub_key=#{inspect rsa_pub_key, pretty: true}")
+  #   IO.puts("\nrsa_public_key_fingerprint_sha256=#{inspect context.rsa_public_key_fingerprint_sha256}")
+  #   rsa_pub_fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key)
+  #   assert String.contains?(context.rsa_public_key_fingerprint_sha256, rsa_pub_fingerprint)
+  # end
 
   test "RSA private_key encrypt and RSA public_key decrypt", context do
     {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
@@ -240,4 +375,5 @@ defmodule ExPublicKeyTest do
     {:ok, priv_key} = ExPublicKey.load(path)
     refute String.contains?(inspect(priv_key), to_string(priv_key.prime_one))
   end
+
 end
