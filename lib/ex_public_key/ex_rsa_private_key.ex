@@ -66,6 +66,31 @@ defmodule ExPublicKey.RSAPrivateKey do
     end
   end
 
+  def decode_der(der_encoded) do
+    key_sequence = :public_key.der_decode(:RSAPrivateKey, der_encoded)
+    rsa_private_key = from_sequence(key_sequence)
+    {:ok, rsa_private_key}
+  end
+
+  def encode_der(rsa_private_key=%__MODULE__{}) do
+    with {:ok, key_sequence} <- as_sequence(rsa_private_key) do
+      der_encoded = :public_key.der_encode(:RSAPrivateKey, key_sequence)
+      {:ok, der_encoded}
+    end
+  end
+
+  def get_public(rsa_private_key=%__MODULE__{}) do
+    %ExPublicKey.RSAPublicKey{
+      public_modulus: rsa_private_key.public_modulus,
+      public_exponent: rsa_private_key.public_exponent,
+    }
+  end
+
+  def get_fingerprint(rsa_private_key=%__MODULE__{}, opts \\ []) do
+    get_public(rsa_private_key)
+    |> ExPublicKey.RSAPublicKey.get_fingerprint(opts)
+  end
+
   # Generating a RSA key on OTP 20.0 results in a RSAPrivateKey with version 0, which is the internal number that matches to :"two-prime".
   # Parsing this structure to PEM and then converting it back will yield a version not of 0, but of :"two-prime".
   # This conversion ensures it is always the symbol.
