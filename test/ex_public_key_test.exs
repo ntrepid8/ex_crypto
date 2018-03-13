@@ -235,4 +235,9 @@ defmodule ExPublicKeyTest do
     recv_msg_unserialized = Poison.Parser.parse!(recv_msg_serialized)
     assert(msg == recv_msg_unserialized)
   end
+
+  test "inspecting a private key doesn't expose it", %{rsa_private_key_path: path} do
+    {:ok, priv_key} = ExPublicKey.load(path)
+    refute String.contains?(inspect(priv_key), to_string(priv_key.prime_one))
+  end
 end
