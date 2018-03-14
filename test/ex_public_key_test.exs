@@ -189,8 +189,10 @@ defmodule ExPublicKeyTest do
 
   test "RSAPrivateKey get_fingerprint/2 (sha256)", context do
     # compute sha256 fingerprint w/ openssl
-    {rsa_private_key_fingerprint_sha256, 0} =
-      System.cmd("openssl", ["sha256", context.rsa_private_key_path])
+    rsa_private_key_fingerprint_sha256 =
+      to_charlist("openssl sha256 #{context.rsa_private_key_path} 2> /dev/null")
+      |> :os.cmd()
+      |> to_string()
 
     {:ok, rsa_priv_key} = ExPublicKey.load(context.rsa_private_key_path)
     fingerprint = RSAPrivateKey.get_fingerprint(rsa_priv_key, format: :sha256)
@@ -201,8 +203,13 @@ defmodule ExPublicKeyTest do
 
   test "RSAPublicKey get_fingerprint/2 (sha256)", context do
     # compute sha256 fingerprint w/ openssl
-    {rsa_public_key_fingerprint_sha256, 0} =
-      System.cmd("openssl", ["sha256", context.rsa_public_key_path_der])
+    # {rsa_public_key_fingerprint_sha256, 0} =
+    #   System.cmd("openssl", ["sha256", context.rsa_public_key_path_der])
+
+    rsa_public_key_fingerprint_sha256 =
+      to_charlist("openssl sha256 #{context.rsa_public_key_path_der}")
+      |> :os.cmd()
+      |> to_string()
 
     {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
     fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key, format: :sha256)
@@ -213,8 +220,13 @@ defmodule ExPublicKeyTest do
 
   test "RSAPublicKey get_fingerprint/2 (md5)", context do
     # compute md5 fingerprint w/ openssl
-    {rsa_public_key_fingerprint_md5, 0} =
-      System.cmd("openssl", ["md5", context.rsa_public_key_path_der])
+    # {rsa_public_key_fingerprint_md5, 0} =
+    #   System.cmd("openssl", ["md5", context.rsa_public_key_path_der])
+
+    rsa_public_key_fingerprint_md5 =
+      to_charlist("openssl md5 #{context.rsa_public_key_path_der}")
+      |> :os.cmd()
+      |> to_string()
 
     {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
     fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key, format: :md5)
@@ -271,12 +283,10 @@ defmodule ExPublicKeyTest do
         assert false, "this should have provoked an error: #{inspect(signature)}"
 
       {:error, reason} ->
-        IO.inspect(reason)
-        assert true, "the right error was provoked: #{reason}"
+        assert true, "the right error was provoked: #{inspect reason}"
 
       {:error, error, _stack_trace} ->
-        IO.inspect(error)
-        assert false, "the wrong error was provoked: #{error.message}"
+        assert false, "the wrong error was provoked: #{inspect error}"
 
       _x ->
         # IO.inspect x
