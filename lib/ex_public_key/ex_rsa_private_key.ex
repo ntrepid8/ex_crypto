@@ -1,8 +1,4 @@
 defmodule ExPublicKey.RSAPrivateKey do
-  defimpl Inspect do
-    def inspect(_data, _opts), do: "%ExPublicKey.RSAPrivateKey{}"
-  end
-
   defstruct version: nil,
             public_modulus: nil,
             public_exponent: nil,
@@ -90,6 +86,14 @@ defmodule ExPublicKey.RSAPrivateKey do
     get_public(rsa_private_key)
     |> ExPublicKey.RSAPublicKey.get_fingerprint(opts)
   end
+
+  # Protocols
+
+  defimpl Inspect do
+    def inspect(_data, _opts), do: "%ExPublicKey.RSAPrivateKey{}"
+  end
+
+  # Helpers
 
   # Generating a RSA key on OTP 20.0 results in a RSAPrivateKey with version 0, which is the internal number that matches to :"two-prime".
   # Parsing this structure to PEM and then converting it back will yield a version not of 0, but of :"two-prime".
