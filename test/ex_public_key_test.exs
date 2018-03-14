@@ -335,4 +335,28 @@ defmodule ExPublicKeyTest do
     refute String.contains?(inspect(priv_key), to_string(priv_key.prime_one))
   end
 
+  test "inspect/2", context do
+    # load the keys
+    priv_key = ExPublicKey.load!(context.rsa_private_key_path)
+    pub_key = ExPublicKey.load!(context.rsa_public_key_path)
+
+    # generate the fingerprints
+    priv_key_fp = RSAPrivateKey.get_fingerprint(priv_key, colons: true)
+    pub_key_fp = RSAPublicKey.get_fingerprint(pub_key, colons: true)
+
+    # get the string results of inspect
+    priv_key_inspect = inspect(priv_key)
+    pub_key_inspect = inspect(pub_key)
+
+    # verify private key
+    assert priv_key_inspect =~ priv_key_fp
+    assert String.starts_with?(priv_key_inspect, "#ExPublicKey.RSAPrivateKey<")
+    assert String.ends_with?(priv_key_inspect, ">")
+
+    # verify public key
+    assert pub_key_inspect =~ pub_key_fp
+    assert String.starts_with?(pub_key_inspect, "#ExPublicKey.RSAPublicKey<")
+    assert String.ends_with?(pub_key_inspect, ">")
+  end
+
 end
