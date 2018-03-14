@@ -90,7 +90,35 @@ defmodule ExPublicKey.RSAPrivateKey do
   # Protocols
 
   defimpl Inspect do
-    def inspect(_data, _opts), do: "%ExPublicKey.RSAPrivateKey{}"
+    import Inspect.Algebra
+
+    @doc """
+    Formats the RSAPrivateKey without exposing any private information.
+
+    example:
+    ```
+    #ExPublicKey.RSAPrivateKey<
+     fingerprint_sha256=7a:40:1c:b9:4b:b8:a5:bb:6b:98:b6:1b:8b:7a:24:8d:45:9b:e5:54
+      17:7e:66:26:7e:95:11:9d:39:14:7b:b2>
+    ```
+    """
+    def inspect(data, _opts) do
+      fp_opts = [format: :sha256, colons: true]
+
+      fp_sha256_parts_doc =
+        ExPublicKey.RSAPrivateKey.get_fingerprint(data, fp_opts)
+        |> String.split(":")
+        |> fold_doc(fn(doc, acc) -> glue(doc, ":", acc) end)
+
+      fp_sha256_doc =
+        glue("fingerprint_sha256=", "", fp_sha256_parts_doc)
+        |> group()
+        |> nest(1)
+
+      glue("#ExPublicKey.RSAPrivateKey<", "", fp_sha256_doc)
+      |> concat(">")
+      |> nest(1)
+    end
   end
 
   # Helpers
