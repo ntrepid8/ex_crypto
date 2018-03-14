@@ -35,11 +35,13 @@ defmodule ExPublicKey.RSAPublicKey do
   def get_fingerprint(rsa_public_key=%__MODULE__{}, opts \\ []) do
     # parse opts
     digest_type = Keyword.get(opts, :digest_type, :sha256)
+    colons = Keyword.get(opts, :colons, false)
 
     # encode_der and hash
     with {:ok, der_encoded} <- encode_der(rsa_public_key),
          digest = :crypto.hash(digest_type, der_encoded),
-      do: Base.encode16(digest, case: :lower)
+         hex_fp = Base.encode16(digest, case: :lower),
+      do: add_fingerprint_colons(hex_fp, colons)
   end
 
   def encode_der(rsa_public_key=%__MODULE__{}) do
@@ -67,6 +69,23 @@ defmodule ExPublicKey.RSAPublicKey do
   end
 
   # Helpers
+
+  defp add_fingerprint_colons(data, true) do
+    case String.valid?(data) do
+      true ->
+        String.splitter(data, "", trim: true)
+        |> Enum.chunk(2)
+        |> Enum.map(fn(chunk_list) ->
+          Enum.join(chunk_list, "")
+        end)
+        |> Enum.join(":")
+      false ->
+        data
+    end
+  end
+  defp add_fingerprint_colons(data, _false) do
+    data
+  end
 
   def from_der_encoded_0({:SubjectPublicKeyInfo, _, der_key}) do
     with {:RSAPublicKey, pub_mod, pub_exp} <- :public_key.der_decode(:RSAPublicKey, der_key),
