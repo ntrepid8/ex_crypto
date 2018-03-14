@@ -187,35 +187,6 @@ defmodule ExPublicKeyTest do
     assert der_encoded == rsa_public_key_der
   end
 
-  # test "RSAPublicKey encode_der (old)", context do
-  #   rsa_public_key_der = File.read!(context.rsa_public_key_path_der)
-  #   rsa_public_key = File.read!(context.rsa_public_key_path)
-  #   IO.puts("\nrsa_public_key_der=#{inspect rsa_public_key_der} byte_size=#{byte_size rsa_public_key_der}")
-  #   pem_entries = :public_key.pem_decode(rsa_public_key)
-  #   IO.puts("\npem_entries=#{inspect pem_entries}")
-
-  #   key_sequence = :public_key.der_decode(:SubjectPublicKeyInfo, rsa_public_key_der)
-  #   IO.puts("\nkey_sequence=#{inspect key_sequence}")
-
-  #   # pkix_decode = :public_key.pkix_decode_cert(rsa_public_key_der, :plain)
-  #   # IO.puts("\npkix_decode=#{inspect pkix_decode}")
-
-
-  #   # pem_entry = :public_key.pem_entry_decode(key_sequence)
-  #   # IO.puts("\npem_entry=#{inspect pem_entry}")
-
-  #   {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
-  #   IO.puts("\nrsa_pub_key=#{inspect rsa_pub_key, pretty: true}")
-  #   {:ok, rsa_pub_key_der_encoded} = RSAPublicKey.encode_der(rsa_pub_key)
-  #   IO.puts("\rsa_pub_key_der_encoded=#{inspect rsa_pub_key_der_encoded} byte_size=#{byte_size rsa_pub_key_der_encoded}")
-  #   File.write!("#{context.rsa_public_key_path_der}.gen.der", rsa_pub_key_der_encoded)
-  #   # {:ok, rsa_pub_key_from_der} = RSAPublicKey.decode_der(rsa_pub_key_der_encoded)
-  #   # assert rsa_pub_key_from_der == rsa_pub_key
-  #   {:ok, rsa_pub_key_from_der} = RSAPublicKey.decode_der(rsa_public_key_der)
-  #   assert rsa_pub_key_from_der == rsa_pub_key
-  #   assert rsa_pub_key_der_encoded == rsa_public_key_der
-  # end
-
   test "RSAPrivateKey get_fingerprint/2 (sha256)", context do
     # compute sha256 fingerprint w/ openssl
     {rsa_private_key_fingerprint_sha256, 0} =
@@ -251,18 +222,6 @@ defmodule ExPublicKeyTest do
     # verify computed value matches openssl
     rsa_public_key_fingerprint_md5 =~ fingerprint
   end
-
-  # test "RSA public_key compute fingerprint", context do
-  #   rsa_public_key_der = File.read!(context.rsa_public_key_path_der)
-  #   IO.puts("\nrsa_public_key_der=#{inspect rsa_public_key_der}")
-  #   {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
-  #   IO.puts("\nrsa_priv_key=#{inspect rsa_priv_key, pretty: true}")
-  #   {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
-  #   IO.puts("\nrsa_pub_key=#{inspect rsa_pub_key, pretty: true}")
-  #   IO.puts("\nrsa_public_key_fingerprint_sha256=#{inspect context.rsa_public_key_fingerprint_sha256}")
-  #   rsa_pub_fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key)
-  #   assert String.contains?(context.rsa_public_key_fingerprint_sha256, rsa_pub_fingerprint)
-  # end
 
   test "RSA private_key encrypt and RSA public_key decrypt", context do
     {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
