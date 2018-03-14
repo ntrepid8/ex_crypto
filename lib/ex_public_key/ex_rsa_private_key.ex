@@ -1,4 +1,8 @@
 defmodule ExPublicKey.RSAPrivateKey do
+  defimpl Inspect do
+    def inspect(_data, _opts), do: "%ExPublicKey.RSAPrivateKey{}"
+  end
+
   defstruct version: nil,
             public_modulus: nil,
             public_exponent: nil,
