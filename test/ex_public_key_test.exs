@@ -203,9 +203,6 @@ defmodule ExPublicKeyTest do
 
   test "RSAPublicKey get_fingerprint/2 (sha256)", context do
     # compute sha256 fingerprint w/ openssl
-    # {rsa_public_key_fingerprint_sha256, 0} =
-    #   System.cmd("openssl", ["sha256", context.rsa_public_key_path_der])
-
     rsa_public_key_fingerprint_sha256 =
       to_charlist("openssl sha256 #{context.rsa_public_key_path_der}")
       |> :os.cmd()
@@ -220,9 +217,6 @@ defmodule ExPublicKeyTest do
 
   test "RSAPublicKey get_fingerprint/2 (md5)", context do
     # compute md5 fingerprint w/ openssl
-    # {rsa_public_key_fingerprint_md5, 0} =
-    #   System.cmd("openssl", ["md5", context.rsa_public_key_path_der])
-
     rsa_public_key_fingerprint_md5 =
       to_charlist("openssl md5 #{context.rsa_public_key_path_der}")
       |> :os.cmd()
