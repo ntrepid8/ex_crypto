@@ -1,5 +1,5 @@
 defmodule ExPublicKey.RSAPrivateKey do
-  defimpl Inspect, for: __MODULE__ do
+  defimpl Inspect do
     def inspect(_data, _opts), do: "%ExPublicKey.RSAPrivateKey{}"
   end
 
