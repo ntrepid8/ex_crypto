@@ -1,5 +1,15 @@
 # Change Log
 
+## v0.9.0
+- Enhancements
+    - implement `Inspect` protocol for public/private RSA keys to protect private key data
+    - add `get_fingerprint/2` for public/private RSA keys to generate fingerprints
+    - add `encode_der/1` and `decode_der/*` for public/private RSA keys to support DER encoding
+    - add `get_public/1` to create a public key from the private RSA key
+- Contributors (thanks!)
+    - [obrok](https://github.com/obrok)
+    - [ntrepid8](https://github.com/ntrepid8)
+
 ## v0.8.0
 - Enhancements
     - remove warnings from Elixir 1.6.1 and Erlang/OTP 20
