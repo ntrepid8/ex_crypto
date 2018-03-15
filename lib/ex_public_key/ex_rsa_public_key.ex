@@ -94,11 +94,11 @@ defmodule ExPublicKey.RSAPublicKey do
       fp_sha256_doc =
         glue("fingerprint_sha256=", "", fp_sha256_parts_doc)
         |> group()
-        |> nest(1)
+        |> nest(2)
 
       glue("#ExPublicKey.RSAPublicKey<", "", fp_sha256_doc)
       |> concat(">")
-      |> nest(1)
+      |> nest(2)
     end
   end
 
