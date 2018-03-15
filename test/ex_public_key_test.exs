@@ -8,47 +8,83 @@ defmodule ExPublicKeyTest do
     # generate a unique temp file name
     rand_string = ExCrypto.rand_chars(4)
     rsa_private_key_path = "/tmp/test_ex_crypto_rsa_private_key_#{rand_string}.pem"
+    rsa_private_key_path_der = "/tmp/test_ex_crypto_rsa_private_key_#{rand_string}.der"
     rsa_public_key_path = "/tmp/test_ex_crypto_rsa_public_key_#{rand_string}.pem"
+    rsa_public_key_path_der = "/tmp/test_ex_crypto_rsa_public_key_#{rand_string}.der"
     rsa_secure_private_key_path = "/tmp/test_ex_crypto_rsa_secure_private_key_#{rand_string}.pem"
 
+    sys_cmd_opts = [stderr_to_stdout: true]
+
     # generate the RSA private key with openssl
-    System.cmd("openssl", ["genrsa", "-out", rsa_private_key_path, "2048"])
+    {_, 0} =
+      System.cmd("openssl", ["genrsa", "-out", rsa_private_key_path, "2048"], sys_cmd_opts)
 
     # export the RSA public key to a file with openssl
-    System.cmd("openssl", [
-      "rsa",
-      "-in",
-      rsa_private_key_path,
-      "-outform",
-      "PEM",
-      "-pubout",
-      "-out",
-      rsa_public_key_path
-    ])
+    {_, 0} =
+      System.cmd("openssl", [
+        "rsa",
+        "-in",
+        rsa_private_key_path,
+        "-outform",
+        "PEM",
+        "-pubout",
+        "-out",
+        rsa_public_key_path
+      ], sys_cmd_opts)
 
     # generate a passphrase protected RSA private key with openssl
-    System.cmd("openssl", [
-      "genrsa",
-      "-out",
-      rsa_secure_private_key_path,
-      "-passout",
-      "pass:#{rand_string}",
-      "2048"
-    ])
+    {_, 0} =
+      System.cmd("openssl", [
+        "genrsa",
+        "-out",
+        rsa_secure_private_key_path,
+        "-passout",
+        "pass:#{rand_string}",
+        "2048"
+      ], sys_cmd_opts)
+
+    # save DER encoded form
+    {_, 0} =
+      System.cmd("openssl", [
+        "rsa",
+        "-in",
+        rsa_private_key_path,
+        "-outform",
+        "DER",
+        "-out",
+        rsa_private_key_path_der],
+        sys_cmd_opts)
+
+    # save DER encoded form (pub)
+    {_, 0} =
+      System.cmd("openssl", [
+        "rsa",
+        "-in",
+        rsa_private_key_path,
+        "-pubout",
+        "-outform",
+        "DER",
+        "-out",
+        rsa_public_key_path_der],
+        sys_cmd_opts)
 
     on_exit(fn ->
       # cleanup: delete the temp keys
       File.rm!(rsa_private_key_path)
       File.rm!(rsa_public_key_path)
+      File.rm!(rsa_private_key_path_der)
+      File.rm!(rsa_public_key_path_der)
       File.rm!(rsa_secure_private_key_path)
     end)
 
     {:ok,
      [
        rsa_private_key_path: rsa_private_key_path,
+       rsa_private_key_path_der: rsa_private_key_path_der,
        rsa_public_key_path: rsa_public_key_path,
+       rsa_public_key_path_der: rsa_public_key_path_der,
        rsa_secure_private_key_path: rsa_secure_private_key_path,
-       passphrase: rand_string
+       passphrase: rand_string,
      ]}
   end
 
@@ -129,6 +165,70 @@ defmodule ExPublicKeyTest do
     assert(decrypted_plain_text == plain_text)
   end
 
+  test "RSAPrivateKey encode_der", context do
+    # load openssl DER encoded file
+    rsa_private_key_der = File.read!(context.rsa_private_key_path_der)
+
+    {:ok, rsa_priv_key} = ExPublicKey.load(context.rsa_private_key_path)
+    {:ok, der_encoded} = RSAPrivateKey.encode_der(rsa_priv_key)
+
+    # compare our DER encoded value to the openssl DER encoded value
+    assert der_encoded == rsa_private_key_der
+  end
+
+  test "RSAPublicKey encode_der", context do
+    # load openssl DER encoded file
+    rsa_public_key_der = File.read!(context.rsa_public_key_path_der)
+
+    {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
+    {:ok, der_encoded} = RSAPublicKey.encode_der(rsa_pub_key)
+
+    # compare our DER encoded value to the openssl DER encoded value
+    assert der_encoded == rsa_public_key_der
+  end
+
+  test "RSAPrivateKey get_fingerprint/2 (sha256)", context do
+    # compute sha256 fingerprint w/ openssl
+    rsa_private_key_fingerprint_sha256 =
+      to_charlist("openssl sha256 #{context.rsa_private_key_path} 2> /dev/null")
+      |> :os.cmd()
+      |> to_string()
+
+    {:ok, rsa_priv_key} = ExPublicKey.load(context.rsa_private_key_path)
+    fingerprint = RSAPrivateKey.get_fingerprint(rsa_priv_key, format: :sha256)
+
+    # verify computed value matches openssl
+    rsa_private_key_fingerprint_sha256 =~ fingerprint
+  end
+
+  test "RSAPublicKey get_fingerprint/2 (sha256)", context do
+    # compute sha256 fingerprint w/ openssl
+    rsa_public_key_fingerprint_sha256 =
+      to_charlist("openssl sha256 #{context.rsa_public_key_path_der}")
+      |> :os.cmd()
+      |> to_string()
+
+    {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
+    fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key, format: :sha256)
+
+    # verify computed value matches openssl
+    rsa_public_key_fingerprint_sha256 =~ fingerprint
+  end
+
+  test "RSAPublicKey get_fingerprint/2 (md5)", context do
+    # compute md5 fingerprint w/ openssl
+    rsa_public_key_fingerprint_md5 =
+      to_charlist("openssl md5 #{context.rsa_public_key_path_der}")
+      |> :os.cmd()
+      |> to_string()
+
+    {:ok, rsa_pub_key} = ExPublicKey.load(context.rsa_public_key_path)
+    fingerprint = RSAPublicKey.get_fingerprint(rsa_pub_key, format: :md5)
+
+    # verify computed value matches openssl
+    rsa_public_key_fingerprint_md5 =~ fingerprint
+  end
+
   test "RSA private_key encrypt and RSA public_key decrypt", context do
     {:ok, rsa_priv_key} = ExPublicKey.load(context[:rsa_private_key_path])
     {:ok, rsa_pub_key} = ExPublicKey.load(context[:rsa_public_key_path])
@@ -177,12 +277,10 @@ defmodule ExPublicKeyTest do
         assert false, "this should have provoked an error: #{inspect(signature)}"
 
       {:error, reason} ->
-        IO.inspect(reason)
-        assert true, "the right error was provoked: #{reason}"
+        assert true, "the right error was provoked: #{inspect reason}"
 
       {:error, error, _stack_trace} ->
-        IO.inspect(error)
-        assert false, "the wrong error was provoked: #{error.message}"
+        assert false, "the wrong error was provoked: #{inspect error}"
 
       _x ->
         # IO.inspect x
@@ -240,4 +338,29 @@ defmodule ExPublicKeyTest do
     {:ok, priv_key} = ExPublicKey.load(path)
     refute String.contains?(inspect(priv_key), to_string(priv_key.prime_one))
   end
+
+  test "inspect/2", context do
+    # load the keys
+    priv_key = ExPublicKey.load!(context.rsa_private_key_path)
+    pub_key = ExPublicKey.load!(context.rsa_public_key_path)
+
+    # generate the fingerprints
+    priv_key_fp = RSAPrivateKey.get_fingerprint(priv_key, colons: true)
+    pub_key_fp = RSAPublicKey.get_fingerprint(pub_key, colons: true)
+
+    # get the string results of inspect
+    priv_key_inspect = inspect(priv_key)
+    pub_key_inspect = inspect(pub_key)
+
+    # verify private key
+    assert priv_key_inspect =~ priv_key_fp
+    assert String.starts_with?(priv_key_inspect, "#ExPublicKey.RSAPrivateKey<")
+    assert String.ends_with?(priv_key_inspect, ">")
+
+    # verify public key
+    assert pub_key_inspect =~ pub_key_fp
+    assert String.starts_with?(pub_key_inspect, "#ExPublicKey.RSAPublicKey<")
+    assert String.ends_with?(pub_key_inspect, ">")
+  end
+
 end

@@ -1,8 +1,4 @@
 defmodule ExPublicKey.RSAPrivateKey do
-  defimpl Inspect do
-    def inspect(_data, _opts), do: "%ExPublicKey.RSAPrivateKey{}"
-  end
-
   defstruct version: nil,
             public_modulus: nil,
             public_exponent: nil,
@@ -65,6 +61,67 @@ defmodule ExPublicKey.RSAPrivateKey do
         {:error, "invalid ExPublicKey.RSAPrivateKey: #{inspect(rsa_private_key)}"}
     end
   end
+
+  def decode_der(der_encoded) do
+    key_sequence = :public_key.der_decode(:RSAPrivateKey, der_encoded)
+    rsa_private_key = from_sequence(key_sequence)
+    {:ok, rsa_private_key}
+  end
+
+  def encode_der(rsa_private_key=%__MODULE__{}) do
+    with {:ok, key_sequence} <- as_sequence(rsa_private_key) do
+      der_encoded = :public_key.der_encode(:RSAPrivateKey, key_sequence)
+      {:ok, der_encoded}
+    end
+  end
+
+  def get_public(rsa_private_key=%__MODULE__{}) do
+    %ExPublicKey.RSAPublicKey{
+      public_modulus: rsa_private_key.public_modulus,
+      public_exponent: rsa_private_key.public_exponent,
+    }
+  end
+
+  def get_fingerprint(rsa_private_key=%__MODULE__{}, opts \\ []) do
+    get_public(rsa_private_key)
+    |> ExPublicKey.RSAPublicKey.get_fingerprint(opts)
+  end
+
+  # Protocols
+
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    @doc """
+    Formats the RSAPrivateKey without exposing any private information.
+
+    example:
+    ```
+    #ExPublicKey.RSAPrivateKey<
+     fingerprint_sha256=7a:40:1c:b9:4b:b8:a5:bb:6b:98:b6:1b:8b:7a:24:8d:45:9b:e5:54
+      17:7e:66:26:7e:95:11:9d:39:14:7b:b2>
+    ```
+    """
+    def inspect(data, _opts) do
+      fp_opts = [format: :sha256, colons: true]
+
+      fp_sha256_parts_doc =
+        ExPublicKey.RSAPrivateKey.get_fingerprint(data, fp_opts)
+        |> String.split(":")
+        |> fold_doc(fn(doc, acc) -> glue(doc, ":", acc) end)
+
+      fp_sha256_doc =
+        glue("fingerprint_sha256=", "", fp_sha256_parts_doc)
+        |> group()
+        |> nest(2)
+
+      glue("#ExPublicKey.RSAPrivateKey<", "", fp_sha256_doc)
+      |> concat(">")
+      |> nest(2)
+    end
+  end
+
+  # Helpers
 
   # Generating a RSA key on OTP 20.0 results in a RSAPrivateKey with version 0, which is the internal number that matches to :"two-prime".
   # Parsing this structure to PEM and then converting it back will yield a version not of 0, but of :"two-prime".

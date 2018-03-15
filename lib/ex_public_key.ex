@@ -365,7 +365,11 @@ defmodule ExPublicKey do
   end
 
   defp generate_rsa_openssl_fallback(bits) do
-    {pem_entry, _exit_code} = System.cmd("openssl", ["genrsa", to_string(bits)])
-    loads(pem_entry)
+    with {pem_entry, 0} <- System.cmd("openssl", ["genrsa", to_string(bits)]) do
+      loads(pem_entry)
+    else
+      {result, ret_code} ->
+        {:error, "result=#{result} ret_code=#{ret_code}"}
+    end
   end
 end
