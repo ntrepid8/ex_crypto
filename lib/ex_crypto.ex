@@ -385,7 +385,10 @@ defmodule ExCrypto do
   end
 
   defp _decrypt(key, initialization_vector, cipher_data, algorithm) do
-    {:ok, :crypto.block_decrypt(algorithm, key, initialization_vector, cipher_data)}
+    case :crypto.block_decrypt(algorithm, key, initialization_vector, cipher_data) do
+      :error -> {:error, "Decryption failed"}
+      plain_text -> {:ok, plain_text}
+    end
   catch
     kind, error -> normalize_error(kind, error)
   end
