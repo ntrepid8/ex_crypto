@@ -174,4 +174,17 @@ defmodule ExCryptoTest do
 
     assert(is_binary(error_message))
   end
+
+  test "errors decrypting with bad auth data" do
+    {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+    {:ok, iv} = ExCrypto.rand_bytes(16)
+    clear_text = "a very secret message"
+    a_data = "the auth and associated data"
+
+    # encrypt
+    {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, a_data, iv, clear_text)
+    {_c_iv, cipher_text, cipher_tag} = payload
+    # decrypt
+    assert {:error, :decrypt_failed} = ExCrypto.decrypt(aes_256_key, "wrong ad", iv, cipher_text, cipher_tag)
+  end
 end
