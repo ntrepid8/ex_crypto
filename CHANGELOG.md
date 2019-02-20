@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.10.0
+- Fixes
+    - fix `ExCrypto.decrypt/3` and `ExCrypto.decrypt/5` error tuples
+- Contributors (thanks!)
+        - [AnilRedshift](https://github.com/AnilRedshift)
+
 ## v0.9.0
 - Enhancements
     - implement `Inspect` protocol for public/private RSA keys to protect private key data
