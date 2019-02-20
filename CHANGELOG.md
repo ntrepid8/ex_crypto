@@ -2,7 +2,7 @@
 
 ## v0.10.0
 - Fixes
-    - fix ExCrypto.decrypt/3 and ExCrypto.decrypt/5 error tuples
+    - fix `ExCrypto.decrypt/3` and `ExCrypto.decrypt/5` error tuples
 - Contributors (thanks!)
         - [AnilRedshift](https://github.com/AnilRedshift)
 
