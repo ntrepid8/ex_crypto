@@ -355,7 +355,7 @@ defmodule ExCrypto do
       iex> assert(val == clear_text)
       true
   """
-  @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, binary}
+  @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
   def decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag) do
     _decrypt(key, initialization_vector, {authentication_data, cipher_text, cipher_tag}, :aes_gcm)
   end
@@ -376,7 +376,7 @@ defmodule ExCrypto do
       iex> assert(val == clear_text)
       true
   """
-  @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, binary}
+  @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
   def decrypt(key, initialization_vector, cipher_text) do
     {:ok, padded_cleartext} = _decrypt(key, initialization_vector, cipher_text, :aes_cbc256)
     {:ok, unpad(padded_cleartext)}
@@ -386,7 +386,7 @@ defmodule ExCrypto do
 
   defp _decrypt(key, initialization_vector, cipher_data, algorithm) do
     case :crypto.block_decrypt(algorithm, key, initialization_vector, cipher_data) do
-      :error -> {:error, "Decryption failed"}
+      :error -> {:error, :decrypt_failed}
       plain_text -> {:ok, plain_text}
     end
   catch
