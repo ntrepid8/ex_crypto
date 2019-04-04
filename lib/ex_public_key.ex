@@ -138,10 +138,7 @@ defmodule ExPublicKey do
         {:ok, ExPublicKey.RSAPublicKey.from_sequence(key_tup)}
 
       x ->
-        {:error,
-         "invalid argument, expected one of[ExPublicKey.RSAPublicKey, ExPublicKey.RSAPrivateKey], found: #{
-           x
-         }"}
+        {:error, "invalid argument, expected one of[ExPublicKey.RSAPublicKey, ExPublicKey.RSAPrivateKey], found: #{x}"}
     end
   end
 
@@ -300,9 +297,7 @@ defmodule ExPublicKey do
   """
   def public_key_from_private_key(private_key = %ExPublicKey.RSAPrivateKey{}) do
     {:ok,
-     ExPublicKey.RSAPublicKey.from_sequence(
-       {:RSAPublicKey, private_key.public_modulus, private_key.public_exponent}
-     )}
+     ExPublicKey.RSAPublicKey.from_sequence({:RSAPublicKey, private_key.public_modulus, private_key.public_exponent})}
   end
 
   @doc """

@@ -169,8 +169,7 @@ defmodule ExCryptoTest do
     {:ok, bad_iv} = ExCrypto.rand_bytes(17)
     clear_text = "secret_message"
     # encrypt
-    {:error, error_message} =
-      ExCrypto.encrypt(aes_256_key, clear_text, %{initialization_vector: bad_iv})
+    {:error, error_message} = ExCrypto.encrypt(aes_256_key, clear_text, %{initialization_vector: bad_iv})
 
     assert(is_binary(error_message))
   end
