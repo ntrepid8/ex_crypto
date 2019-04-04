@@ -5,7 +5,7 @@ defmodule ExCrypto.ExTokenTest do
 
   test "Token.create/3 and Token.verify/4 (basic)" do
     payload = %{"foo" => "bar", "spam" => "eggs"}
-    encoded_payload = Poison.encode!(payload)
+    encoded_payload = Jason.encode!(payload)
     {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
 
     # create the token
@@ -29,7 +29,7 @@ defmodule ExCrypto.ExTokenTest do
     past_dt = :calendar.gregorian_seconds_to_datetime(past_seconds)
 
     payload = %{"foo" => "bar", "spam" => "eggs"}
-    encoded_payload = Poison.encode!(payload)
+    encoded_payload = Jason.encode!(payload)
     {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
 
     # create the token (in the past)
@@ -52,7 +52,7 @@ defmodule ExCrypto.ExTokenTest do
     future_dt = :calendar.gregorian_seconds_to_datetime(future_seconds)
 
     payload = %{"foo" => "bar", "spam" => "eggs"}
-    encoded_payload = Poison.encode!(payload)
+    encoded_payload = Jason.encode!(payload)
     {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
 
     # create the token (in the future)
@@ -76,7 +76,7 @@ defmodule ExCrypto.ExTokenTest do
     past_dt = :calendar.gregorian_seconds_to_datetime(past_seconds)
 
     payload = %{"foo" => "bar", "spam" => "eggs"}
-    encoded_payload = Poison.encode!(payload)
+    encoded_payload = Jason.encode!(payload)
     {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
 
     # create the token

@@ -41,7 +41,7 @@ rsa_pub_key = ExPublicKey.load!("/path/to/public_key.pem")
 msg = %{"name_first"=>"Chuck","name_last"=>"Norris"}
 
 # serialize the JSON
-msg_serialized = Poison.encode!(msg)
+msg_serialized = Jason.encode!(msg)
 
 # generate time-stamp
 ts = DateTime.utc_now |> DateTime.to_unix
@@ -73,7 +73,7 @@ recv_msg_serialized = Enum.fetch!(parts, 1)
 assert(sig_valid)
 
 # un-serialize the JSON
-recv_msg_unserialized = Poison.Parser.parse!(recv_msg_serialized)
+recv_msg_unserialized = Jason.decode!(recv_msg_serialized)
 assert(msg == recv_msg_unserialized)
 ```
 *Note: this example is similar to the test "sign and verify a JSON payload" in `test/ex_public_key_test.exs`.*
