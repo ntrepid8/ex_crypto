@@ -44,7 +44,8 @@ defmodule ExCryptoHMACTest do
     assert(invalid_mac !== nil)
     assert(is_binary(invalid_mac))
 
-    {:ok, mac_is_valid} = ExCrypto.HMAC.verify_hmac(context[:data], context[:aes_128_key], invalid_mac)
+    {:ok, mac_is_valid} =
+      ExCrypto.HMAC.verify_hmac(context[:data], context[:aes_128_key], invalid_mac)
 
     assert(mac_is_valid === false)
   end

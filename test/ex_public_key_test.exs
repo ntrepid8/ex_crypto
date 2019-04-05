@@ -331,7 +331,8 @@ defmodule ExPublicKeyTest do
     # it should probably no more than 5 minutes old, and no more than 15 minutes in the future
 
     # verify the signature
-    {:ok, sig_valid} = ExPublicKey.verify("#{recv_ts}|#{recv_msg_serialized}", recv_sig, rsa_pub_key)
+    {:ok, sig_valid} =
+      ExPublicKey.verify("#{recv_ts}|#{recv_msg_serialized}", recv_sig, rsa_pub_key)
 
     assert(sig_valid)
 

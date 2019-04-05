@@ -218,7 +218,9 @@ defmodule ExCrypto.Token do
     end
   end
 
-  defp decode_token_0(<<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>>) do
+  defp decode_token_0(
+         <<mac::bits-size(256), iv::bits-size(128), sig_ts::integer-size(64), payload::binary>>
+       ) do
     {:ok, [iv, payload, sig_ts, mac]}
   end
 
