@@ -27,8 +27,8 @@ defmodule ExCrypto do
       key_error ->
         key_error
 
-      # %{term: %{message: message}} = normalized_result ->
-      #   {:error, message}
+      %{term: %{message: message}} = normalized_result ->
+        {:error, message}
 
       %{message: message} = normalized_result ->
         {:error, message}
