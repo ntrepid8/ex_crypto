@@ -187,4 +187,12 @@ defmodule ExCryptoTest do
     # decrypt
     assert {:error, :decrypt_failed} = ExCrypto.decrypt(aes_256_key, "wrong ad", iv, cipher_text, cipher_tag)
   end
+
+  test "errors decrypting with argument error (cipher_text)" do
+    # test for ** (MatchError) no match of right hand side value: %MatchError{term: %ArgumentError{message: "argument error"}}
+    {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
+    {:ok, iv} = ExCrypto.rand_bytes(16)
+
+    assert {:error, "argument error"} = ExCrypto.decrypt(aes_256_key, iv, "asdasdasdads")
+  end
 end
