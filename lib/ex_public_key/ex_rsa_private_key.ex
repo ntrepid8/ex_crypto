@@ -68,21 +68,21 @@ defmodule ExPublicKey.RSAPrivateKey do
     {:ok, rsa_private_key}
   end
 
-  def encode_der(rsa_private_key=%__MODULE__{}) do
+  def encode_der(rsa_private_key = %__MODULE__{}) do
     with {:ok, key_sequence} <- as_sequence(rsa_private_key) do
       der_encoded = :public_key.der_encode(:RSAPrivateKey, key_sequence)
       {:ok, der_encoded}
     end
   end
 
-  def get_public(rsa_private_key=%__MODULE__{}) do
+  def get_public(rsa_private_key = %__MODULE__{}) do
     %ExPublicKey.RSAPublicKey{
       public_modulus: rsa_private_key.public_modulus,
-      public_exponent: rsa_private_key.public_exponent,
+      public_exponent: rsa_private_key.public_exponent
     }
   end
 
-  def get_fingerprint(rsa_private_key=%__MODULE__{}, opts \\ []) do
+  def get_fingerprint(rsa_private_key = %__MODULE__{}, opts \\ []) do
     get_public(rsa_private_key)
     |> ExPublicKey.RSAPublicKey.get_fingerprint(opts)
   end
@@ -108,7 +108,7 @@ defmodule ExPublicKey.RSAPrivateKey do
       fp_sha256_parts_doc =
         ExPublicKey.RSAPrivateKey.get_fingerprint(data, fp_opts)
         |> String.split(":")
-        |> fold_doc(fn(doc, acc) -> glue(doc, ":", acc) end)
+        |> fold_doc(fn doc, acc -> glue(doc, ":", acc) end)
 
       fp_sha256_doc =
         glue("fingerprint_sha256=", "", fp_sha256_parts_doc)

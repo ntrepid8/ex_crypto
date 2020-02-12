@@ -28,9 +28,9 @@ defmodule ExCrypto.Mixfile do
 
   defp deps do
     [
-      {:poison, ">= 2.0.0"},
+      {:jason, "~> 1.1"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.15", only: :dev}
+      {:ex_doc, "~> 0.20.1", only: :dev}
     ]
   end
 

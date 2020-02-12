@@ -185,7 +185,8 @@ defmodule ExCryptoTest do
     {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, a_data, iv, clear_text)
     {_c_iv, cipher_text, cipher_tag} = payload
     # decrypt
-    assert {:error, :decrypt_failed} = ExCrypto.decrypt(aes_256_key, "wrong ad", iv, cipher_text, cipher_tag)
+    assert {:error, :decrypt_failed} =
+             ExCrypto.decrypt(aes_256_key, "wrong ad", iv, cipher_text, cipher_tag)
   end
 
   test "errors decrypting with argument error (cipher_text)" do

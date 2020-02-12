@@ -15,12 +15,12 @@ defmodule ExCrypto.Token do
   is available after the token is verified like this:
 
       iex> payload = %{"user_id" => 12345}
-      iex> encoded_payload = Poison.encode!(payload)
+      iex> encoded_payload = Jason.encode!(payload)
       iex> {:ok, secret} = ExCrypto.generate_aes_key(:aes_256, :bytes)
       iex> {:ok, token} = ExCrypto.Token.create(encoded_payload, secret)
       iex> ttl = (15 * 60)  # 15 minute TTL (in seconds)
       iex> {:ok, verified_payload} = ExCrypto.Token.verify(token, secret, ttl)
-      iex> decoded_verified_payload = Poison.decode!(verified_payload)
+      iex> decoded_verified_payload = Jason.decode!(verified_payload)
       iex> assert(decoded_verified_payload == payload)
       iex> Map.get(decoded_verified_payload, "user_id")
       12345

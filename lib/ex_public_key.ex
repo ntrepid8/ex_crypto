@@ -139,9 +139,8 @@ defmodule ExPublicKey do
 
       x ->
         {:error,
-         "invalid argument, expected one of[ExPublicKey.RSAPublicKey, ExPublicKey.RSAPrivateKey], found: #{
-           x
-         }"}
+         "invalid argument, expected one of[ExPublicKey.RSAPublicKey, ExPublicKey.RSAPrivateKey], " <>
+           "found: #{x}"}
     end
   end
 

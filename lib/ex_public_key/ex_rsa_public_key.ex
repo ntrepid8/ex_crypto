@@ -32,7 +32,7 @@ defmodule ExPublicKey.RSAPublicKey do
     end
   end
 
-  def get_fingerprint(rsa_public_key=%__MODULE__{}, opts \\ []) do
+  def get_fingerprint(rsa_public_key = %__MODULE__{}, opts \\ []) do
     # parse opts
     digest_type = Keyword.get(opts, :digest_type, :sha256)
     colons = Keyword.get(opts, :colons, false)
@@ -41,27 +41,30 @@ defmodule ExPublicKey.RSAPublicKey do
     with {:ok, der_encoded} <- encode_der(rsa_public_key),
          digest = :crypto.hash(digest_type, der_encoded),
          hex_fp = Base.encode16(digest, case: :lower),
-      do: add_fingerprint_colons(hex_fp, colons)
+         do: add_fingerprint_colons(hex_fp, colons)
   end
 
-  def encode_der(rsa_public_key=%__MODULE__{}) do
+  def encode_der(rsa_public_key = %__MODULE__{}) do
     # hack to encode same defaults as openssl in SubjectPublicKeyInfo format
     with {:ok, key_sequence} <- as_sequence(rsa_public_key) do
       pem_entry = :public_key.pem_entry_encode(:SubjectPublicKeyInfo, key_sequence)
+
       der_encoded =
         :public_key.pem_encode([pem_entry])
         |> String.trim()
         |> String.split("\n")
-        |> Enum.filter(fn(line) -> !String.contains?(line, "-----") end)
+        |> Enum.filter(fn line -> !String.contains?(line, "-----") end)
         |> Enum.join("")
         |> Base.decode64!()
+
       {:ok, der_encoded}
     end
   end
 
   def decode_der(der_encoded, opts \\ []) do
     # parse opts
-    format = Keyword.get(opts, :format, :SubjectPublicKeyInfo) # also supports :RSAPublicKey
+    # also supports :RSAPublicKey
+    format = Keyword.get(opts, :format, :SubjectPublicKeyInfo)
 
     # decode and parse
     :public_key.der_decode(format, der_encoded)
@@ -89,7 +92,7 @@ defmodule ExPublicKey.RSAPublicKey do
       fp_sha256_parts_doc =
         ExPublicKey.RSAPublicKey.get_fingerprint(data, fp_opts)
         |> String.split(":")
-        |> fold_doc(fn(doc, acc) -> glue(doc, ":", acc) end)
+        |> fold_doc(fn doc, acc -> glue(doc, ":", acc) end)
 
       fp_sha256_doc =
         glue("fingerprint_sha256=", "", fp_sha256_parts_doc)
@@ -108,29 +111,32 @@ defmodule ExPublicKey.RSAPublicKey do
     case String.valid?(data) do
       true ->
         String.splitter(data, "", trim: true)
-        |> Enum.chunk(2)
-        |> Enum.map(fn(chunk_list) ->
+        |> Enum.chunk_every(2)
+        |> Enum.map(fn chunk_list ->
           Enum.join(chunk_list, "")
         end)
         |> Enum.join(":")
+
       false ->
         data
     end
   end
+
   defp add_fingerprint_colons(data, _false) do
     data
   end
 
   def from_der_encoded_0({:SubjectPublicKeyInfo, _, der_key}) do
     with {:RSAPublicKey, pub_mod, pub_exp} <- :public_key.der_decode(:RSAPublicKey, der_key),
-      do: from_der_encoded_0({:RSAPublicKey, pub_mod, pub_exp})
+         do: from_der_encoded_0({:RSAPublicKey, pub_mod, pub_exp})
   end
+
   def from_der_encoded_0({:RSAPublicKey, pub_mod, pub_exp}) do
     rsa_pub_key = from_sequence({:RSAPublicKey, pub_mod, pub_exp})
     {:ok, rsa_pub_key}
   end
+
   def from_der_encoded_0(_other) do
     {:error, :invalid_public_key}
   end
-
 end
