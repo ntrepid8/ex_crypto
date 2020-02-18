@@ -21,11 +21,16 @@ defmodule ExCrypto do
   defp normalize_error(kind, error, key_and_iv \\ nil) do
     key_error = test_key_and_iv_bitlength(key_and_iv)
 
+    normalized_result = Exception.normalize(kind, error)
+
     cond do
       key_error ->
         key_error
 
-      %{message: message} = Exception.normalize(kind, error) ->
+      %{term: %{message: message}} = normalized_result ->
+        {:error, message}
+
+      %{message: message} = normalized_result ->
         {:error, message}
 
       x = Exception.normalize(kind, error) ->
