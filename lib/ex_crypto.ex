@@ -19,22 +19,21 @@ defmodule ExCrypto do
   end
 
   defp normalize_error(kind, error, key_and_iv \\ nil) do
-    key_error = test_key_and_iv_bitlength(key_and_iv)
+    try do
+      key_error = test_key_and_iv_bitlength(key_and_iv)
 
-    normalized_result = Exception.normalize(kind, error)
+      cond do
+        key_error ->
+          key_error
 
-    cond do
-      key_error ->
-        key_error
+        %{message: message} = Exception.normalize(kind, error) ->
+          {:error, message}
 
-      %{term: %{message: message}} = normalized_result ->
-        {:error, message}
-
-      %{message: message} = normalized_result ->
-        {:error, message}
-
-      x = Exception.normalize(kind, error) ->
-        {kind, x, System.stacktrace()}
+      end
+    rescue
+      x  ->
+        normalized = Exception.normalize(kind, x)
+        {kind, normalized, System.stacktrace()}
     end
   end
 
@@ -98,7 +97,7 @@ defmodule ExCrypto do
       iex> assert(rand_int < 21)
       true
 
-      iex> rand_int = ExCrypto.rand_int(23, 99)
+      iex> rand_int = ExCrypto.rand_int(23, 98)
       iex> assert(rand_int > 22)
       true
       iex> assert(rand_int < 99)

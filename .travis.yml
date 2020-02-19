@@ -3,11 +3,25 @@ before_install:
   - sudo apt-get install -y haveged
 language: elixir
 elixir:
-  - 1.4.2
+  - 1.5.3
+  - 1.6.6
+  - 1.7.2
+  - 1.8.2
+  - 1.9.4
 otp_release:
   - 18.2.1
+  - 20.1
+  - 20.3
+  - 21.3
+  - 22.2
+script:
+  - mix compile --warnings-as-errors
+  - mix test --trace
 matrix:
-  include:
-    - elixir: 1.4.5
-      otp_release: 20.1
-script: mix test --trace
+  exclude:
+    - elixir: 1.5.3
+      otp_release: 21.3
+    - elixir: 1.5.3
+      otp_release: 22.2
+    - elixir: 1.6.6
+      otp_release: 22.2
