@@ -19,10 +19,10 @@ defmodule ExPublicKey do
   end
 
   def normalize_error(kind, error) do
-    case Exception.normalize(kind, error) do
-      %{message: message} ->
-        {:error, message}
-
+    try do
+      %{message: message} = Exception.normalize(kind, error)
+      {:error, message}
+    rescue
       x ->
         {kind, x, System.stacktrace()}
     end

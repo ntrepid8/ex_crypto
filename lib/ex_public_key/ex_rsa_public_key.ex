@@ -108,7 +108,7 @@ defmodule ExPublicKey.RSAPublicKey do
     case String.valid?(data) do
       true ->
         String.splitter(data, "", trim: true)
-        |> Enum.chunk(2)
+        |> Enum.chunk_every(2)
         |> Enum.map(fn(chunk_list) ->
           Enum.join(chunk_list, "")
         end)
