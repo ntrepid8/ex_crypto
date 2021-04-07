@@ -1,14 +1,13 @@
 # ExCrypto
 
-The goal of `ExCrypto` and `ExPublicKey` is to expose a subset of the functionality from the Erlang modules `crypto` and `public_key` so that writing secure Elixir applications is a little bit easier without being overwhelming. In many functions some sane defaults are provided to decrease the complexity of implementing those functions in your own code.
-
-Get from hex.pm: <https://hex.pm/packages/ex_crypto>
-
-Checkout the docs at: <https://hexdocs.pm/ex_crypto/readme.html>
-
-## Build Status
-
 [![Build Status](https://travis-ci.org/ntrepid8/ex_crypto.svg?branch=master)](https://travis-ci.org/ntrepid8/ex_crypto)
+[![Module Version](https://img.shields.io/hexpm/v/ex_crypto.svg)](https://hex.pm/packages/ex_crypto)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/ex_crypto/)
+[![Total Download](https://img.shields.io/hexpm/dt/ex_crypto.svg)](https://hex.pm/packages/ex_crypto)
+[![License](https://img.shields.io/hexpm/l/ex_crypto.svg)](https://github.com/ntrepid8/ex_crypto/blob/master/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/ntrepid8/ex_crypto.svg)](https://github.com/ntrepid8/ex_crypto/commits/master)
+
+The goal of `ExCrypto` and `ExPublicKey` is to expose a subset of the functionality from the Erlang modules `crypto` and `public_key` so that writing secure Elixir applications is a little bit easier without being overwhelming. In many functions some sane defaults are provided to decrease the complexity of implementing those functions in your own code.
 
 ## Using ExPublicKey
 
@@ -142,7 +141,7 @@ iex(1)> {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_128, :bytes)
 {:ok, <<...>>}
 ```
 
-Often it's more convenient to handle the key as a base64 encoded string and you can generate a new key, already encoded as a base64 unicode string like this:
+Often it's more convenient to handle the key as a base64 encoded string and you can generate a new key, already encoded as a base64 Unicode string like this:
 
 ```elixir
 iex(2)> {:ok, aes_128_key} = ExCrypto.generate_aes_key(:aes_128, :base64)
@@ -162,10 +161,16 @@ iex(4)> {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :base64)
  "Bs_BzhuwseEA8ZUvuEY0mq9Rmlv6cSoU_RaYD14Q62HiN_kJ4FiaW0YYppf1ffYPQ56xuitxQtYAnaeP-Q5l1WPh5aExdwCG_PUm5g-MlOUA1XSSP2RvuQqAiHzazIzjGVSIcl0Gr7TSLPOoIQrPshMNaA4j3SGZ3lAOqO1quvXtDn-9Sxwr5dwV7VzOIvXRwb0GbZeYp8lnVJgeqHl8cEhUTfT_h9Pm7tU2CFeHZCDK8ntFT_t4q6VlcBcvw_Pj3CGcVSmpmCHMKW1brt6jXGBijqSTdbjYDZnCx2Q44VoYqMMZ1U2GnVyjc-ZuwugwGGqQ7UEqV_TOMjbK6Oxx-Q=="}
  ```
 
- In both examples the `:bytes` atom can be substituted for `:base64` if you wish to receive your key as a `bitstring` rather than as a base64 encoded unicode string.
+ In both examples the `:bytes` atom can be substituted for `:base64` if you wish to receive your key as a `bitstring` rather than as a base64 encoded Unicode string.
 
  As you can see the keys grow longer in order of bit length.  A 128 bit key is more than sufficient for most applications but if you are slightly more paranoid than average use a 192 bit key.
 
  If your paranoia knows no bounds or you are protecting state secrets from nation-state owned quantum computers use a 256 bit key.
 
  If you are concerned about hyper-advanced aliens with quantum computers you might need a longer key. Enterprise grade keys such as this can be generated upon request in the context of a consulting agreement.  For this application we recommend at least a 612 bit key.
+
+## Copyright and License
+
+Copyright (c) 2015 Josh Austin
+
+Released under the MIT License, which can be found in [LICENSE.md](./LICENSE.md).
