@@ -195,4 +195,22 @@ defmodule ExCryptoTest do
 
     assert {:error, "argument error"} = ExCrypto.decrypt(aes_256_key, iv, "asdasdasdads")
   end
+
+  test "encrypt/decrypt sanity test" do
+    key = <<1::128>>
+    iv = <<0::128>>
+    txt = ["First bytes", "Second bytes"]
+    txt_joined = IO.iodata_to_binary(txt)
+    aad = "Some bytes"
+
+    cipher_text = <<240, 130, 38, 96, 130, 241, 189, 52, 3, 190, 179, 213, 132, 1, 72, 192, 103,
+      176, 90, 104, 15, 71, 158>>
+      cipher_tag = <<131, 47, 45, 91, 142, 85, 9, 244, 21, 141, 214, 71, 31, 135, 2, 155>>
+
+    # encrypt
+    {:ok, {^aad, {^iv, ^cipher_text, ^cipher_tag}}} = ExCrypto.encrypt(key, aad, iv, txt)
+
+    # # decrypt
+    {:ok, ^txt_joined} = ExCrypto.decrypt(key, aad, iv, cipher_text, cipher_tag)
+  end
 end

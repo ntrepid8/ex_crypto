@@ -319,7 +319,7 @@ defmodule ExCrypto do
   end
 
   defp _encrypt(key, initialization_vector, encryption_payload, algorithm) do
-    case :crypto.block_encrypt(algorithm, key, initialization_vector, encryption_payload) do
+    case crypto_block_encrypt(algorithm, key, initialization_vector, encryption_payload) do
       {cipher_text, cipher_tag} ->
         {authentication_data, _clear_text} = encryption_payload
         {:ok, {authentication_data, {initialization_vector, cipher_text, cipher_tag}}}
@@ -390,7 +390,7 @@ defmodule ExCrypto do
   end
 
   defp _decrypt(key, initialization_vector, cipher_data, algorithm) do
-    case :crypto.block_decrypt(algorithm, key, initialization_vector, cipher_data) do
+    case crypto_block_decrypt(algorithm, key, initialization_vector, cipher_data) do
       :error -> {:error, :decrypt_failed}
       plain_text -> {:ok, plain_text}
     end
@@ -456,5 +456,45 @@ defmodule ExCrypto do
   @doc false
   def universal_time(:unix) do
     :calendar.datetime_to_gregorian_seconds(:calendar.universal_time()) - @epoch
+  end
+
+  # :crypto.crypto_one_time and :crypto.crypto_one_time_aead added in otp 22.0
+  # :crypto.block_encrypt and :crypto.block_decrypt deprecated in 23 and removed in 23
+  # http://erlang.org/doc/apps/crypto/new_api.html#the-new-api
+  if System.otp_release() |> String.to_integer() >= 23 do
+    # otp 23 deprecated and otp 24 removed retired cipher names
+    # http://erlang.org/doc/apps/crypto/new_api.html#retired-cipher-names
+    defp map_algorithm(:aes_cbc256, _key), do: :aes_256_cbc
+    defp map_algorithm(:aes_gcm, key) do
+      case bit_size(key) do
+        128 -> :aes_128_gcm
+        192 -> :aes_192_gcm
+        256 -> :aes_256_gcm
+      end
+    end
+
+    defp crypto_block_encrypt(algorithm, key, initialization_vector, {aad, plain_text}) do
+      :crypto.crypto_one_time_aead(map_algorithm(algorithm, key), key, initialization_vector, plain_text, aad, true)
+    end
+
+    defp crypto_block_encrypt(algorithm, key, initialization_vector, plain_text) do
+      :crypto.crypto_one_time(map_algorithm(algorithm, key), key, initialization_vector, plain_text, true)
+    end
+
+    defp crypto_block_decrypt(algorithm, key, initialization_vector, {aad, data, tag}) do
+      :crypto.crypto_one_time_aead(map_algorithm(algorithm, key), key, initialization_vector, data, aad, tag, false)
+    end
+
+    defp crypto_block_decrypt(algorithm, key, initialization_vector, data) do
+      :crypto.crypto_one_time(map_algorithm(algorithm, key), key, initialization_vector, data, false)
+    end
+  else
+    defp crypto_block_encrypt(algorithm, key, initialization_vector, encryption_payload) do
+      :crypto.block_encrypt(algorithm, key, initialization_vector, encryption_payload)
+    end
+
+    defp crypto_block_decrypt(algorithm, key, initialization_vector, cipher_data) do
+      :crypto.block_decrypt(algorithm, key, initialization_vector, cipher_data)
+    end
   end
 end
