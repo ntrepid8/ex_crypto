@@ -25,7 +25,7 @@ defmodule ExCrypto do
       case Exception.normalize(kind, error) do
         %{term: %{message: message}} -> {:error, message}
         %{message: message} -> {:error, message}
-        normalized_error -> {kind, normalized_error, System.stacktrace()}
+        normalized_error -> {kind, normalized_error, __STACKTRACE__}
       end
     end
   end
