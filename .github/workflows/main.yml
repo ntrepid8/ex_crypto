@@ -21,6 +21,8 @@ jobs:
     - name: Initiated by
       run: |
         echo "Initiated by: ${GITHUB_ACTOR}"
+    - name: Install haveged
+      run: sudo apt-get install -y haveged
     - name: Fetch tags
       run: |
         git fetch --prune --unshallow --tags
@@ -51,6 +53,8 @@ jobs:
     - name: Initiated by
       run: |
         echo "Initiated by: ${GITHUB_ACTOR}"
+    - name: Install haveged
+      run: sudo apt-get install -y haveged
     - name: Fetch tags
       run: |
         git fetch --prune --unshallow --tags
@@ -81,6 +85,8 @@ jobs:
     - name: Initiated by
       run: |
         echo "Initiated by: ${GITHUB_ACTOR}"
+    - name: Install haveged
+      run: sudo apt-get install -y haveged
     - name: Fetch tags
       run: |
         git fetch --prune --unshallow --tags
@@ -111,6 +117,8 @@ jobs:
     - name: Initiated by
       run: |
         echo "Initiated by: ${GITHUB_ACTOR}"
+    - name: Install haveged
+      run: sudo apt-get install -y haveged
     - name: Fetch tags
       run: |
         git fetch --prune --unshallow --tags
