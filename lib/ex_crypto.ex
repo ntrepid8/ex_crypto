@@ -131,7 +131,7 @@ defmodule ExCrypto do
   def rand_bytes(length) do
     {:ok, :crypto.strong_rand_bytes(length)}
   catch
-    kind, error -> ExPublicKey.normalize_error(kind, error)
+    kind, error -> ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   @spec rand_bytes!(integer) :: binary
