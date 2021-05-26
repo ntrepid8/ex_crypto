@@ -29,6 +29,38 @@ jobs:
     - name: Set up Elixir
       uses: actions/setup-elixir@v1
       with:
+        elixir-version: '1.12.0' # Define the elixir version [required]
+        otp-version: '24.0.1' # Define the OTP version [required]
+        experimental-otp: true
+    - name: Restore dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+    - name: Setup
+      env:
+        MIX_ENV: test
+      run: mix setup
+    - name: Run tests
+      run: mix test
+
+  test-otp-23:
+    name: Build and Test (OTP 23|Elixir 1.11.4)
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Initiated by
+      run: |
+        echo "Initiated by: ${GITHUB_ACTOR}"
+    - name: Install haveged
+      run: sudo apt-get install -y haveged
+    - name: Fetch tags
+      run: |
+        git fetch --prune --unshallow --tags
+    - name: Set up Elixir
+      uses: actions/setup-elixir@v1
+      with:
         elixir-version: '1.11.4' # Define the elixir version [required]
         otp-version: '23.3.1' # Define the OTP version [required]
         experimental-otp: true
