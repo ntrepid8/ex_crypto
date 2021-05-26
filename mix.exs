@@ -38,7 +38,7 @@ defmodule ExCrypto.Mixfile do
   defp aliases do
     [
       setup: ["deps.get"],
-      test: ["test", "--trace"],
+      test: ["test --trace"],
     ]
   end
 
