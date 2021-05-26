@@ -19,33 +19,22 @@ defmodule ExCrypto do
   end
 
   defp normalize_error(kind, error, key_and_iv \\ nil) do
-    key_error = test_key_and_iv_bitlength(key_and_iv)
-
-    normalized_result = Exception.normalize(kind, error)
-
-    cond do
-      key_error ->
-        key_error
-
-      %{term: %{message: message}} = normalized_result ->
-        {:error, message}
-
-      %{message: message} = normalized_result ->
-        {:error, message}
-
-      x = Exception.normalize(kind, error) ->
-        {kind, x, System.stacktrace()}
+    # first test for key and IV bit-length errors
+    with :ok <- test_key_and_iv_bitlength(key_and_iv) do
+      # next normalize the Erlang error to Elixir format
+      case Exception.normalize(kind, error) do
+        %{term: %{message: message}} -> {:error, message}
+        %{message: message} -> {:error, message}
+        normalized_error -> {kind, normalized_error, System.stacktrace()}
+      end
     end
   end
 
-  defp test_key_and_iv_bitlength(nil), do: nil
-
-  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length,
-    do: {:error, @bitlength_error}
-
-  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 128) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 192) == 0, do: nil
-  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 256) == 0, do: nil
+  defp test_key_and_iv_bitlength(nil), do: :ok
+  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length, do: {:error, @bitlength_error}
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 128) == 0, do: :ok
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 192) == 0, do: :ok
+  defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 256) == 0, do: :ok
   defp test_key_and_iv_bitlength({_key, _iv}), do: {:error, @bitlength_error}
 
   @doc """
