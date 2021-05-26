@@ -18,14 +18,14 @@ defmodule ExCrypto do
     end
   end
 
-  defp normalize_error(kind, error, key_and_iv \\ nil) do
+  defp normalize_error(stacktrace, kind, error, key_and_iv \\ nil) do
     # first test for key and IV bit-length errors
     with :ok <- test_key_and_iv_bitlength(key_and_iv) do
       # next normalize the Erlang error to Elixir format
       case Exception.normalize(kind, error) do
         %{term: %{message: message}} -> {:error, message}
         %{message: message} -> {:error, message}
-        normalized_error -> {kind, normalized_error, __STACKTRACE__}
+        normalized_error -> {kind, normalized_error, stacktrace}
       end
     end
   end
@@ -219,7 +219,7 @@ defmodule ExCrypto do
   def encrypt(key, authentication_data, initialization_vector, clear_text) do
     _encrypt(key, initialization_vector, {authentication_data, clear_text}, :aes_gcm)
   catch
-    kind, error -> normalize_error(kind, error)
+    kind, error -> normalize_error(__STACKTRACE__, kind, error)
   end
 
   @doc """
@@ -248,7 +248,7 @@ defmodule ExCrypto do
   catch
     kind, error ->
       {:ok, initialization_vector} = rand_bytes(16)
-      normalize_error(kind, error, {key, initialization_vector})
+      normalize_error(__STACKTRACE__, kind, error, {key, initialization_vector})
   end
 
   @doc """
@@ -277,7 +277,7 @@ defmodule ExCrypto do
   def encrypt(key, clear_text, %{initialization_vector: initialization_vector}) do
     _encrypt(key, initialization_vector, pad(clear_text, @aes_block_size), :aes_cbc256)
   catch
-    kind, error -> normalize_error(kind, error, {key, initialization_vector})
+    kind, error -> normalize_error(__STACKTRACE__, kind, error, {key, initialization_vector})
   end
 
   @doc """
@@ -375,7 +375,7 @@ defmodule ExCrypto do
     with {:ok, padded_cleartext} <- _decrypt(key, initialization_vector, cipher_text, :aes_cbc256),
       do: {:ok, unpad(padded_cleartext)}
   catch
-    kind, error -> normalize_error(kind, error, {key, initialization_vector})
+    kind, error -> normalize_error(__STACKTRACE__, kind, error, {key, initialization_vector})
   end
 
   defp _decrypt(key, initialization_vector, cipher_data, algorithm) do
@@ -384,7 +384,7 @@ defmodule ExCrypto do
       plain_text -> {:ok, plain_text}
     end
   catch
-    kind, error -> normalize_error(kind, error)
+    kind, error -> normalize_error(__STACKTRACE__, kind, error)
   end
 
   @doc """
