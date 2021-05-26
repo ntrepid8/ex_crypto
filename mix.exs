@@ -10,6 +10,7 @@ defmodule ExCrypto.Mixfile do
       description: description(),
       package: package(),
       deps: deps(),
+      aliases: aliases(),
       docs: [extras: ["README.md"]]
     ]
   end
@@ -31,6 +32,13 @@ defmodule ExCrypto.Mixfile do
       {:poison, ">= 2.0.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.15", only: :dev}
+    ]
+  end
+
+  defp aliases do
+    [
+      setup: ["deps.get"],
+      test: ["test", "--trace"],
     ]
   end
 
