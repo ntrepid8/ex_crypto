@@ -75,7 +75,10 @@ defmodule ExCrypto do
   end
 
   @doc """
-  Returns a random integer between `low` and `high`.
+  Returns a random integer between two non-negative integers `low` and `high` inclusive.
+
+  Put another way, the result will be greater than or equal to the `low` value and it will
+  be less than or equal to the `high` value.
 
   Accepts two `integer` arguments for the `low` and `high` boundaries. The `low` argument
   must be less than the `high` argument.
@@ -83,21 +86,21 @@ defmodule ExCrypto do
   ## Examples
 
       iex> rand_int = ExCrypto.rand_int(2, 20)
-      iex> assert(rand_int > 1)
+      iex> assert(rand_int >= 2)
       true
-      iex> assert(rand_int < 21)
+      iex> assert(rand_int <= 20)
       true
 
       iex> rand_int = ExCrypto.rand_int(23, 99)
-      iex> assert(rand_int > 22)
+      iex> assert(rand_int >= 23)
       true
-      iex> assert(rand_int < 99)
+      iex> assert(rand_int <= 99)
       true
 
       iex> rand_int = ExCrypto.rand_int(212, 736)
-      iex> assert(rand_int > 211)
+      iex> assert(rand_int >= 212)
       true
-      iex> assert(rand_int < 737)
+      iex> assert(rand_int <= 736)
       true
 
   """
