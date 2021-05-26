@@ -75,7 +75,7 @@ defmodule ExCrypto do
   end
 
   @doc """
-  Returns a random integer between two non-negative integers `low` and `high` inclusive.
+  Returns a random integer between two integers `low` and `high` inclusive.
 
   Put another way, the result will be greater than or equal to the `low` value and it will
   be less than or equal to the `high` value.
@@ -103,10 +103,26 @@ defmodule ExCrypto do
       iex> assert(rand_int <= 736)
       true
 
+      iex> rand_int = ExCrypto.rand_int(-100, -1)
+      iex> assert(rand_int >= -100)
+      true
+      iex> assert(rand_int <= -1)
+      true
+
+      iex> rand_int = ExCrypto.rand_int(-100, 100)
+      iex> assert(rand_int >= -100)
+      true
+      iex> assert(rand_int <= 100)
+      true
+
   """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
-    low + :rand.uniform(high - low + 1) - 1
+    # ensure low and high are actually the low and high values
+    low_low = Enum.min([low, high])
+    high_high = Enum.max([low, high])
+    # generate a random integer
+    low_low + :rand.uniform(high_high - low_low + 1) - 1
   end
 
   @doc """
