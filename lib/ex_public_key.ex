@@ -18,13 +18,13 @@ defmodule ExPublicKey do
     end
   end
 
-  def normalize_error(kind, error) do
+  def normalize_error(stacktrace, kind, error) do
     case Exception.normalize(kind, error) do
       %{message: message} ->
         {:error, message}
 
       x ->
-        {kind, x, System.stacktrace()}
+        {kind, x, stacktrace}
     end
   end
 
@@ -126,7 +126,7 @@ defmodule ExPublicKey do
     end
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   defp sort_key_tup(key_tup) do
@@ -149,7 +149,7 @@ defmodule ExPublicKey do
     {:ok, :public_key.sign(msg, sha, rsa_priv_key_seq)}
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   def sign(msg, sha, private_key) do
@@ -164,7 +164,7 @@ defmodule ExPublicKey do
   defp verify_0(rsa_pub_key_seq, msg, sha, signature) do
     {:ok, :public_key.verify(msg, sha, signature, rsa_pub_key_seq)}
   catch
-    kind, error -> ExPublicKey.normalize_error(kind, error)
+    kind, error -> ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   def verify(msg, sha, signature, public_key) do
@@ -180,7 +180,7 @@ defmodule ExPublicKey do
     {:ok, :public_key.encrypt_private(clear_text, rsa_priv_key_seq)}
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   def encrypt_private(clear_text, private_key, opts \\ []) do
@@ -196,7 +196,7 @@ defmodule ExPublicKey do
     {:ok, :public_key.encrypt_public(clear_text, rsa_pub_key_seq)}
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   def encrypt_public(clear_text, public_key, opts \\ []) do
@@ -219,7 +219,7 @@ defmodule ExPublicKey do
     {:ok, :public_key.decrypt_private(cipher_bytes, rsa_priv_key_seq)}
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   def decrypt_private(cipher_text, private_key, opts \\ []) do
@@ -242,7 +242,7 @@ defmodule ExPublicKey do
     {:ok, :public_key.decrypt_public(cipher_bytes, rsa_pub_key_seq)}
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   def decrypt_public(cipher_text, public_key, opts \\ []) do
@@ -274,7 +274,7 @@ defmodule ExPublicKey do
     {:ok, :public_key.generate_key({type, bits, public_exp})}
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   def generate_key(:rsa, bits, _public_exp, false) do
@@ -329,7 +329,7 @@ defmodule ExPublicKey do
     {:ok, :public_key.pem_encode([pem_entry])}
   catch
     kind, error ->
-      ExPublicKey.normalize_error(kind, error)
+      ExPublicKey.normalize_error(__STACKTRACE__, kind, error)
   end
 
   defp decode(encoded_payload, _url_safe = true) do
