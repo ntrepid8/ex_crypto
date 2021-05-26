@@ -372,8 +372,8 @@ defmodule ExCrypto do
   """
   @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
   def decrypt(key, initialization_vector, cipher_text) do
-    {:ok, padded_cleartext} = _decrypt(key, initialization_vector, cipher_text, :aes_cbc256)
-    {:ok, unpad(padded_cleartext)}
+    with {:ok, padded_cleartext} <- _decrypt(key, initialization_vector, cipher_text, :aes_cbc256),
+      do: {:ok, unpad(padded_cleartext)}
   catch
     kind, error -> normalize_error(kind, error, {key, initialization_vector})
   end
