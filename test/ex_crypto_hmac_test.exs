@@ -16,7 +16,7 @@ defmodule ExCryptoHMACTest do
     assert(is_binary(mac))
 
     # Check it matches the Erlang
-    check_mac = :crypto.hmac(:sha256, context[:aes_128_key], context[:data])
+    check_mac = crypto_mac(:sha256, context[:aes_128_key], context[:data])
     assert(check_mac === mac)
 
     # Check it does not match when a different key is used
@@ -48,5 +48,23 @@ defmodule ExCryptoHMACTest do
       ExCrypto.HMAC.verify_hmac(context[:data], context[:aes_128_key], invalid_mac)
 
     assert(mac_is_valid === false)
+  end
+
+  test "HMAC sanity test" do
+    key = <<1::256>>
+    expected = <<255, 242, 109, 110, 128, 183, 203, 185, 101, 218, 219, 200, 6, 30, 144, 10, 165, 252, 221, 4, 107, 207, 219, 113, 18, 133, 129, 128, 100, 176, 203, 228>>
+    {:ok, ^expected} = ExCrypto.HMAC.hmac("Some data", key)
+  end
+
+  # :crypto.mac added in otp 22.1, :crypto.hmac deprecated in 23 and removed in 24
+  # http://erlang.org/doc/apps/crypto/new_api.html#the-new-api
+  if System.otp_release() |> String.to_integer() >= 23 do
+    defp crypto_mac(type, key, data) do
+      :crypto.mac(:hmac, type, key, data)
+    end
+  else
+    defp crypto_mac(type, key, data) do
+      :crypto.hmac(type, key, data)
+    end
   end
 end
