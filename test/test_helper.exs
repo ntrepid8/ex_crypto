@@ -1,2 +1,2 @@
 Logger.configure(level: :debug)
-ExUnit.start()
+ExUnit.start(capture_log: true)

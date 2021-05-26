@@ -8,7 +8,7 @@ Checkout the docs at: <https://hexdocs.pm/ex_crypto/readme.html>
 
 ## Build Status
 
-[![Build Status](https://travis-ci.org/ntrepid8/ex_crypto.svg?branch=master)](https://travis-ci.org/ntrepid8/ex_crypto)
+![master](https://github.com/ntrepid8/ex_crypto/actions/workflows/main.yml/badge.svg?branch=master)
 
 ## Using ExPublicKey
 
