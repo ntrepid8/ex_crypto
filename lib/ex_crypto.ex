@@ -146,7 +146,12 @@ defmodule ExCrypto do
   Returns an AES key.
 
   Accepts a `key_type` (`:aes_128`|`:aes_192`|`:aes_256`) and `key_format`
-  (`:base64`|`:bytes`) to determine type of key to produce.
+  (`:base64`|`:url_base64`|`:bytes`) to determine type of key to produce.
+
+  N.B. the key formats `:bas64` and `:url_base64` use `Base.encode64/2` and `Base.url_decode64/2`,
+  respectively. The two encoding methods will result in different outputs for some values, so
+  see the documentation for each of the `Base` functions and choose the format that is appropriate
+  to your application.
 
   ## Examples
 
@@ -158,11 +163,19 @@ defmodule ExCrypto do
       iex> assert String.length(key) == 44
       true
 
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_256, :url_base64)
+      iex> assert String.length(key) == 44
+      true
+
       iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :bytes)
       iex> assert bit_size(key) == 192
       true
 
       iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :base64)
+      iex> assert String.length(key) == 32
+      true
+
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_192, :url_base64)
       iex> assert String.length(key) == 32
       true
 
@@ -173,15 +186,22 @@ defmodule ExCrypto do
       iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :base64)
       iex> assert String.length(key) == 24
       true
+
+      iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :url_base64)
+      iex> assert String.length(key) == 24
+      true
   """
   @spec generate_aes_key(atom, atom) :: {:ok, binary} | {:error, binary}
   def generate_aes_key(key_type, key_format) do
     case {key_type, key_format} do
-      {:aes_128, :base64} -> rand_bytes!(16) |> url_encode64
+      {:aes_128, :base64} -> rand_bytes!(16) |> encode64
+      {:aes_128, :url_base64} -> rand_bytes!(16) |> url_encode64
       {:aes_128, :bytes} -> rand_bytes(16)
-      {:aes_192, :base64} -> rand_bytes!(24) |> url_encode64
+      {:aes_192, :base64} -> rand_bytes!(24) |> encode64
+      {:aes_192, :url_base64} -> rand_bytes!(24) |> url_encode64
       {:aes_192, :bytes} -> rand_bytes(24)
-      {:aes_256, :base64} -> rand_bytes!(32) |> url_encode64
+      {:aes_256, :base64} -> rand_bytes!(32) |> encode64
+      {:aes_256, :url_base64} -> rand_bytes!(32) |> url_encode64
       {:aes_256, :bytes} -> rand_bytes(32)
       _ -> {:error, "invalid key_type/key_format"}
     end
@@ -189,6 +209,10 @@ defmodule ExCrypto do
 
   defp url_encode64(bytes_to_encode) do
     {:ok, Base.url_encode64(bytes_to_encode)}
+  end
+
+  defp encode64(bytes_to_encode) do
+    {:ok, Base.encode64(bytes_to_encode)}
   end
 
   @doc """
