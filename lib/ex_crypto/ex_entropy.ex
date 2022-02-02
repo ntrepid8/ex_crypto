@@ -12,17 +12,24 @@ defmodule ExEntropy do
     # convert the binary value into a list with exponent as one of [1, 8]
     val_list = gen_val_list(value, exponent)
 
-    val_range = round(:math.pow(2, exponent) - 1)
-    val_accumulator = for x <- 0..val_range, into: %{}, do: {x, 0}
+    max_val = round(:math.pow(2, exponent) - 1)
+    val_accumulator = for x <- 0..max_val, into: %{}, do: {x, 0}
 
     # accumulate occurrence counts
     accumulated_occurances = count_occurances(val_accumulator, val_list)
 
     # transform the map of occurrence counts into a list
-    ao_list = Enum.map(accumulated_occurances, fn {_k, v} -> v end)
+    occurrence_counts =
+      Enum.sort_by(accumulated_occurances, fn {k, _v} -> k end)
+      |> Enum.map(fn {_k, v} -> v end)
+
+    # arguments for Shannon's entropy
+    entropy = 0
+    block_count = length(val_list)
+    block_range = :math.pow(2, exponent)
 
     # compute Shannon's entropy
-    shannon_entropy_0(0, length(val_list), length(ao_list), ao_list)
+    shannon_entropy_0(entropy, block_count, block_range, occurrence_counts)
   end
 
   def shannon_entropy(value) when is_binary(value) do
