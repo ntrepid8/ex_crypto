@@ -55,6 +55,7 @@ defmodule ExCrypto do
       iex> rand_string = ExCrypto.rand_chars(44)
       iex> assert(String.length(rand_string) == 44)
       true
+
   """
   @spec rand_chars(integer) :: String.t()
   def rand_chars(num_chars) do
@@ -98,6 +99,7 @@ defmodule ExCrypto do
       true
       iex> assert(rand_int < 737)
       true
+
   """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
@@ -126,6 +128,7 @@ defmodule ExCrypto do
       true
       iex> assert(bit_size(rand_bytes) == 256)
       true
+
   """
   @spec rand_bytes(integer) :: {:ok, binary} | {:error, binary}
   def rand_bytes(length) do
@@ -173,6 +176,7 @@ defmodule ExCrypto do
       iex> {:ok, key} = ExCrypto.generate_aes_key(:aes_128, :base64)
       iex> assert String.length(key) == 24
       true
+
   """
   @spec generate_aes_key(atom, atom) :: {:ok, binary} | {:error, binary}
   def generate_aes_key(key_type, key_format) do
@@ -348,6 +352,7 @@ defmodule ExCrypto do
       iex> {:ok, val} = ExCrypto.decrypt(aes_256_key, auth_data, init_vec, cipher_text, cipher_tag)
       iex> assert(val == clear_text)
       true
+
   """
   @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
   def decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag) do
@@ -369,6 +374,7 @@ defmodule ExCrypto do
       iex> {:ok, val} = ExCrypto.decrypt(aes_256_key, init_vec, cipher_text)
       iex> assert(val == clear_text)
       true
+
   """
   @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
   def decrypt(key, initialization_vector, cipher_text) do
@@ -406,6 +412,7 @@ defmodule ExCrypto do
       iex> {:ok, encoded_payload} = ExCrypto.encode_payload(init_vec, cipher_text, cipher_tag)
       iex> assert(String.valid?(encoded_payload))
       true
+
   """
   @spec encode_payload(binary, binary, binary) :: {:ok, binary} | {:error, binary}
   def encode_payload(initialization_vector, cipher_text, cipher_tag) do
@@ -431,6 +438,7 @@ defmodule ExCrypto do
       true
       iex> assert(d_cipher_tag == cipher_tag)
       true
+
   """
   @spec decode_payload(binary) :: {:ok, {binary, binary, binary}} | {:error, binary}
   def decode_payload(encoded_parts) do
