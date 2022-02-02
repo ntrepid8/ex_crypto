@@ -81,13 +81,23 @@ defmodule ExEntropyTest do
     assert(byte_size(bytes_val_2) == 256)
 
     # measure the entropy in the low entropy string and assert it is low
-    entropy = ExEntropy.shannon_entropy(bytes_val_2, 1)
+    entropy_1 = ExEntropy.shannon_entropy(bytes_val_2, 1)
 
     # a 256 byte binary string with 2 unique values has a Shannon's entropy 
     # value of much more than 0.125
-    assert(entropy > 0.126)
+    assert(entropy_1 > 0.126)
 
     # in fact, for 2^x where x is 1 the same sort of value looks almost ok
-    assert(entropy > 0.8)
+    assert(entropy_1 > 0.65)
+
+    # entropy_1 probably does not reach extremely high confidence
+    # it could happen if the number of `0`s was almost exactly the same as the number of `1`s
+    # so this assertion may fail occasionally, but it illustrates why 1-bit block sizes should not be used
+    if entropy_1 > 0.99 do
+      # patterns are more likely to be detectable using full bytes
+      entropy_8 = ExEntropy.shannon_entropy(bytes_val_2, 8)
+      assert(entropy_8 < 0.126)
+    end
   end
+
 end

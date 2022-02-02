@@ -75,7 +75,10 @@ defmodule ExCrypto do
   end
 
   @doc """
-  Returns a random integer between `low` and `high`.
+  Returns a random integer between two integers `low` and `high` inclusive.
+
+  Put another way, the result will be greater than or equal to the `low` value and it will
+  be less than or equal to the `high` value.
 
   Accepts two `integer` arguments for the `low` and `high` boundaries. The `low` argument
   must be less than the `high` argument.
@@ -83,27 +86,43 @@ defmodule ExCrypto do
   ## Examples
 
       iex> rand_int = ExCrypto.rand_int(2, 20)
-      iex> assert(rand_int > 1)
+      iex> assert(rand_int >= 2)
       true
-      iex> assert(rand_int < 21)
+      iex> assert(rand_int <= 20)
       true
 
       iex> rand_int = ExCrypto.rand_int(23, 99)
-      iex> assert(rand_int > 22)
+      iex> assert(rand_int >= 23)
       true
-      iex> assert(rand_int < 99)
+      iex> assert(rand_int <= 99)
       true
 
       iex> rand_int = ExCrypto.rand_int(212, 736)
-      iex> assert(rand_int > 211)
+      iex> assert(rand_int >= 212)
       true
-      iex> assert(rand_int < 737)
+      iex> assert(rand_int <= 736)
+      true
+
+      iex> rand_int = ExCrypto.rand_int(-100, -1)
+      iex> assert(rand_int >= -100)
+      true
+      iex> assert(rand_int <= -1)
+      true
+
+      iex> rand_int = ExCrypto.rand_int(-100, 100)
+      iex> assert(rand_int >= -100)
+      true
+      iex> assert(rand_int <= 100)
       true
 
   """
   @spec rand_int(integer, integer) :: integer
   def rand_int(low, high) do
-    low + :rand.uniform(high - low + 1) - 1
+    # ensure low and high are actually the low and high values
+    low_low = Enum.min([low, high])
+    high_high = Enum.max([low, high])
+    # generate a random integer
+    low_low + :rand.uniform(high_high - low_low + 1) - 1
   end
 
   @doc """
