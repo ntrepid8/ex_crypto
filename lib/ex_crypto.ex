@@ -461,12 +461,16 @@ defmodule ExCrypto do
   """
   @spec decode_payload(binary) :: {:ok, {binary, binary, binary}} | {:error, binary}
   def decode_payload(encoded_parts) do
-    {:ok, decoded_parts} = Base.url_decode64(encoded_parts)
-    decoded_length = byte_size(decoded_parts)
-    iv = Kernel.binary_part(decoded_parts, 0, 16)
-    cipher_text = Kernel.binary_part(decoded_parts, 16, decoded_length - 32)
-    cipher_tag = Kernel.binary_part(decoded_parts, decoded_length, -16)
-    {:ok, {iv, cipher_text, cipher_tag}}
+    with {:ok, decoded_parts} <- Base.url_decode64(encoded_parts),
+         decoded_length when decoded_length >= 32 <- byte_size(decoded_parts) do
+      iv = Kernel.binary_part(decoded_parts, 0, 16)
+      cipher_text = Kernel.binary_part(decoded_parts, 16, decoded_length - 32)
+      cipher_tag = Kernel.binary_part(decoded_parts, decoded_length, -16)
+      {:ok, {iv, cipher_text, cipher_tag}}
+    else
+      :error -> {:error, "invalid base64 payload"}
+      _ -> {:error, "invalid decoded payload length"}
+    end
   end
 
   @doc false
