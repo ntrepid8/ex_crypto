@@ -140,6 +140,13 @@ defmodule ExCryptoTest do
     assert(cipher_tag == pc_tag)
   end
 
+  test "errors decoding invalid payloads" do
+    assert {:error, "invalid base64 payload"} = ExCrypto.decode_payload(".")
+
+    assert {:error, "invalid decoded payload length"} =
+             Base.url_encode64("AAAAAAAAAAAAAAAA") |> ExCrypto.decode_payload()
+  end
+
   test "test aes_cbc encrypt with auto-IV (256 bit key)" do
     {:ok, aes_256_key} = ExCrypto.generate_aes_key(:aes_256, :bytes)
 
@@ -185,7 +192,8 @@ defmodule ExCryptoTest do
     {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, a_data, iv, clear_text)
     {_c_iv, cipher_text, cipher_tag} = payload
     # decrypt
-    assert {:error, :decrypt_failed} = ExCrypto.decrypt(aes_256_key, "wrong ad", iv, cipher_text, cipher_tag)
+    assert {:error, :decrypt_failed} =
+             ExCrypto.decrypt(aes_256_key, "wrong ad", iv, cipher_text, cipher_tag)
   end
 
   test "errors decrypting with argument error (cipher_text)" do
@@ -203,9 +211,11 @@ defmodule ExCryptoTest do
     txt_joined = IO.iodata_to_binary(txt)
     aad = "Some bytes"
 
-    cipher_text = <<240, 130, 38, 96, 130, 241, 189, 52, 3, 190, 179, 213, 132, 1, 72, 192, 103,
-      176, 90, 104, 15, 71, 158>>
-      cipher_tag = <<131, 47, 45, 91, 142, 85, 9, 244, 21, 141, 214, 71, 31, 135, 2, 155>>
+    cipher_text =
+      <<240, 130, 38, 96, 130, 241, 189, 52, 3, 190, 179, 213, 132, 1, 72, 192, 103, 176, 90, 104,
+        15, 71, 158>>
+
+    cipher_tag = <<131, 47, 45, 91, 142, 85, 9, 244, 21, 141, 214, 71, 31, 135, 2, 155>>
 
     # encrypt
     {:ok, {^aad, {^iv, ^cipher_text, ^cipher_tag}}} = ExCrypto.encrypt(key, aad, iv, txt)
